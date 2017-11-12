@@ -1,0 +1,12 @@
+
+root
+    lines
+        > @multiple(component, \endl)
+    
+    definition        
+        > \id \indent lines \dedent    =>
+            {type: "definition", name: $[0], body: $[2]}
+            
+    component
+        > production
+        > definition

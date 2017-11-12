@@ -1,0 +1,66 @@
+
+Root:
+	Grammar
+
+Grammar:
+	Body
+	Body endl
+
+Body:
+	BodyLine				=> [$[0]]
+	Body endl BodyLine		=> $[0].concat $[2]
+
+BodyLine:
+	Precedence
+	Def
+
+String:
+	string		=> if $[0][0] == '"' then $[0].slice 1, -1 else $[0].slice 1
+
+Precedence:
+	ass String				=> {type: $[0].slice 1, tokens: [$[1]]}
+	Precedence String		=> {type: $[0].type, tokens: [...$[0].tokens, $[1]]}
+
+
+Expression:
+	CallExpression
+	OrExpression
+	String
+	id
+
+ExpressionList:
+	Expression	=> [$[0]]
+	ExpressionList Expression => [...$[0], $[1]]
+
+
+Production:
+	">" ExpressionList			=> {type: 'production', production: $[1], code: null}
+	">" ExpressionList code		=> {type: 'production', production: $[1], code: $[2]}
+	">" eps						=> {type: 'production', production: [], code: null}
+	">" eps	code				=> {type: 'production', production: [], code: $[2]}
+
+DefLine:
+	Production
+	Definition
+
+DefLines:
+	DefLine					=> [$[0]]
+	DefLines endl DefLine	=> [...$[0], $[2]]
+
+Def:
+	id indent DefLines dedent	=> {type: "definition", name: $[0], body: $[2]}
+
+Args:
+	ExpressionList				=> [$[0]]
+	Args "," ExpressionList		=> [...$[0], $[1]]
+
+CallExpression:
+	"@" id "(" Args ")"			=> {type: "call", name: $[1], args: $[3]}
+
+OrList:
+	String			=> [$[0]]
+	OrList String	=> [...$[0], $[1]]
+
+OrExpression:
+	"[" OrList "]"	=> {type: "or", list: $[1]}
+

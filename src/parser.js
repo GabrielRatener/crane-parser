@@ -54,31 +54,31 @@ export class ParsingTable {
 		}
 	}
 
-	print() {
+	print(tabsize = 4) {
 		const term = Array.from(this.indexMappers.action);
 		const nonterm = Array.from(this.indexMappers.goto);
-		const tabulate = (value = '') => {
+		const tabulate = (value = '', length = 4) => {
+			if (value.length > length)
+				throw new Error('Too long to tabulate!')
 			const str = "" + value;
-			const numMax = `${max(this.length, this.grammar.productions.length)}`;
-			const length = numMax.length + 5 - str.length;
-			return `${str} ${new Array(length).join(' ')}`;			
+			return `${" ".repeat(length - value.length)}${value}`;			
 		};
 
 		console.log(
-			tabulate(),
+			tabulate('', tabsize),
 			'|',
 			term
-				.map(([e]) => tabulate(e))
+				.map(([e]) => tabulate(e, tabsize))
 				.join(''),
 			'|',
 			nonterm
-				.map(([e]) => tabulate(e))
+				.map(([e]) => tabulate(e, tabsize))
 				.join('')
 			);
 
 		for (let i = 0; i < this.length; i++) {
 			console.log(
-				tabulate(i),
+				tabulate(i, tabsize),
 				'|',
 				term
 					.map(([e]) => {
@@ -89,11 +89,11 @@ export class ParsingTable {
 						if (e) {
 							const [type, num] = e;
 							if (type === 'a')
-								return tabulate("acc");
+								return tabulate("acc", tabsize);
 							else
-								return tabulate(`${type}${num}`);
+								return tabulate(`${type}${num}`, tabsize);
 						} else
-							return tabulate();
+							return tabulate('', tabsize);
 					})
 					.join(''),
 				'|',
@@ -101,9 +101,9 @@ export class ParsingTable {
 					.map(([e]) => this.get(i, e, true))
 					.map(e => {
 						if (e === undefined)
-							return tabulate();
+							return tabulate('', tabsize);
 						else
-							return tabulate(e);
+							return tabulate(e, tabsize);
 					})
 					.join('')
 				)

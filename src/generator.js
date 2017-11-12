@@ -22,7 +22,7 @@ const setIdTracker = () => ({
 		}
 	},
 	getSet(id) {
-
+		// patience is key ...
 	}
 });
 
@@ -37,9 +37,9 @@ const setify = function(iterable) {
 }
 
 
-// all these functions take in a grammar and output a parsingtable
+// all these functions take in a grammar and output a parsing table
 
-// LALR(1) generator
+// LR(1) generator
 export function clr(grammar, log = false) {
 	function lookaheads(prev, current) {
 		const [lastP, offset, set] = prev;
@@ -140,7 +140,8 @@ export function clr(grammar, log = false) {
 		const sPrec = grammar.precedence.getPrecedence(lookahead);
 		const rPrec = grammar.precedence.extractPrecedence(grammar, prod);
 
-		console.log([prod, rPrec], [lookahead, sPrec])
+		//console.log('resolving...')
+		//console.log([prod, rPrec], [lookahead, sPrec])
 
 		if (rPrec < sPrec) {
 			row.set(lookahead, shift);
@@ -259,6 +260,6 @@ export function clr(grammar, log = false) {
 	for (let [pid, [index, row]] of rows) {
 		row.append();
 	}
-
-	return table;
+    
+    return table;
 }

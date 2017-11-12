@@ -1,4 +1,4 @@
-
+import {writeFileSync} from "fs"
 import {parse, ParsingTable, token} from './src/parser'
 import Grammar from './src/grammar'
 import {clr} from './src/generator'
@@ -8,6 +8,8 @@ import {RIGHT, LEFT} from './src/precedence'
 
 import {StringSource} from './test/source'
 import {getTokensFromSource} from './test/scanner'
+
+import {generate} from "./src/code-gen"
 
 const tuple = (...args) => Object.freeze(args);
 
@@ -52,6 +54,16 @@ const lexer = {
 	}
 }
 
+const reducers = new Map([
+	[1, `parseInt($[0])`],
+	[2, `$[0] + $[2]`],
+	[3, `$[0] - $[2]`],
+	[4, `$[0] * $[2]`],
+	[5, `$[0] / $[2]`],
+	[6, `$[0] ^ $[2]`],
+	[7, `$[1]`],
+]);
+
 const [productions, reduce] = (() => {
 	const productions = [
 		tuple('G', ['E']),
@@ -80,43 +92,6 @@ const precedence = [
 	{direction: RIGHT, tokens: ['^']},
 ];
 
-/*
-const tests = [
-	[ 'GG', true],
-	[ 'GT', false],
-	[ 'TG', false],
-	[ 'TE', false],
-	[ 'TT', false],
-	[ 'EE', true],
-	[ 'E1', false],
-	[ '10', false],
-	[ '', true],
-	[ 'GGT', false],
-	[ 'TGT', false],
-	[ 'EGE', true],
-	[ 'EEEEGT', false],
-	[ 'EEEEGE', true],
-	[ 'EEGEGG', true],
-];
-
-for (let [string, expected] of tests) {
-	const test = string.split('');
-	if (grammar.isNullable(test) === expected)
-		console.log('yes')
-	else
-		console.log('no')
-}
-
-console.log()
-console.log(grammar.isNullable(['G', 'G']))
-
-process.exit();
-for (let symbol of grammar.first(['E'], new Set(['$']))) {
-	if (symbol === '')
-		continue;
-	console.log(symbol);
-}
-*/
 const prod = [
 	tuple('G', ['S']),
 	tuple('S', ['X', 'X']),
@@ -132,6 +107,10 @@ const
 console.log();
 table.print();
 console.log();
+
+writeFileSync(`${__dirname}/gened.js`, generate(table, reducers), 'utf8');
+
+process.exit();
 
 function* tokenize(str) {
 	const source = new StringSource(str);

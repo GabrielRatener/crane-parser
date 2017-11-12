@@ -1,0 +1,18 @@
+
+%import aba:hobo haha:hangout lkjlkj %from "home"
+%import : yaba %from "home"
+%import * : aba %from "home"
+
+%left "+" "-"
+%left "*" "/"
+%right "^"
+
+e
+    > \int      => parseInt $[0]
+    > "(" e ")" => $[1]
+    > e "+" e   => $[0] + $[2]
+    > e "-" e   => $[0] - $[2]
+    > e "*" e   => $[0] * $[2]
+    > e "/" e   => $[0] / $[2]
+    > e "^" e   => Math.pow $[0], $[2]
+    

@@ -1,0 +1,45 @@
+{
+  "name": "crane-parser",
+  "version": "1.0.0",
+  "description": "LR parsing with a hint of saffron",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "acorn": "^5.0.3",
+    "commander": "^2.11.0",
+    "escodegen": "^1.8.1",
+    "estemplate": "^0.5.1",
+    "livescript": "^1.5.0",
+    "tangler": "^0.2.3"
+  },
+  "devDependencies": {
+    "babel": "^6.23.0",
+    "babel-core": "^6.26.0",
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.26.0",
+    "colors": "^1.1.2",
+    "rollup": "^0.49.2"
+  },
+  "bin": {
+    "crane": "./bin/compile.js"
+  },
+  "scripts": {
+    "test": "test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GabrielRatener/crane-js.git"
+  },
+  "keywords": [
+    "parser",
+    "javascript",
+    "grammar"
+  ],
+  "author": "Gabriel Ratener",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/GabrielRatener/crane-js/issues"
+  },
+  "homepage": "https://github.com/GabrielRatener/crane-js#readme"
+}

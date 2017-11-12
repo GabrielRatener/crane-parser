@@ -1,0 +1,94 @@
+
+Root:
+	Grammar
+
+Grammar:
+	Body
+	Body endl
+
+Body:
+	BodyLine				=> [$[0]]
+	Body endl BodyLine		=> $[0].concat $[2]
+
+Specifier:
+    id          => {imported: $[0], local: $[0]}
+    id ":" id   => {imported: $[0], local: $[2]}
+    
+SpecifierList:
+    Specifier                   => [$[0]]
+    SpecifierList Specifier     => [...$[0], $[1]]
+
+Import:
+    import ":" id from String            => {type: 'import', default: $[2], path: $[4]}
+    import "*" ":" id from String        => {type: 'import', all: $[3], path: $[5]}
+    import SpecifierList from String     => {type: 'import', dependencies: $[1], path: $[3]}
+
+BodyLine:
+    Import
+    Precedence
+    Def
+
+String: 
+    string		=> if $[0][0] == '"' then $[0].slice 1, -1 else $[0].slice 1
+
+StringList:
+    String              => [$[0]]
+    StringList String   => [...$[0], $[1]]
+
+Precedence:
+    ass StringList	=> {type: $[0].slice(1), tokens: $[1]}
+    ass id          => {type: $[0].slice(1), alias: $[1], tokens: []}
+
+
+Expression:
+	CallExpression
+	OrExpression
+	String
+	id
+
+ExpressionList:
+	Expression	=> [$[0]]
+	ExpressionList Expression => [...$[0], $[1]]
+
+AttributeList:
+    Attribute                       => [$[0]]
+    AttributeList endl Attribute    => $[...$[0], $[2]]
+
+Attribute:
+    prec id                     => {type: 'prec', value: $[1]}
+
+Production:
+	">" ExpressionList			=> {type: 'production', production: $[1], code: null}
+	">" ExpressionList code		=> {type: 'production', production: $[1], code: $[2]}
+	">" eps						=> {type: 'production', production: [], code: null}
+	">" eps	code				=> {type: 'production', production: [], code: $[2]}
+
+DefLine:
+    Def
+    Production
+    AttributeList endl Production   =>
+        production = $[2]
+        for {type, value} in $[0]
+            production[type] = value
+        production
+
+DefLines:
+	DefLine					=> [$[0]]
+	DefLines endl DefLine	=> [...$[0], $[2]]
+
+Def:
+	id indent DefLines dedent	=> {type: "definition", name: $[0], body: $[2]}
+
+Args:
+	ExpressionList				=> [$[0]]
+	Args "," ExpressionList		=> [...$[0], $[2]]
+
+CallExpression:
+	"@" id "(" Args ")"			=> {type: "call", name: $[1], args: $[3]}
+
+OrList:
+	String			=> [$[0]]
+	OrList String	=> [...$[0], $[1]]
+
+OrExpression:
+	"[" OrList "]"	=> {type: "or", list: $[1]}

@@ -1,7 +1,7 @@
 
 import {SparseTable} from "./collections"
 
-export const LEFT = 0, RIGHT = 1;
+export const LEFT = 0, RIGHT = 1, NONE = 2;
 
 // the precedence table can be used to resolve shift/reduce conflicts
 // either by adding operator/token precedence rules. Or explicitly, by
@@ -9,13 +9,13 @@ export const LEFT = 0, RIGHT = 1;
 export class PrecedenceTable {
 	constructor(levels = []) {
 
-		this.levels = [LEFT]; // for default level 0 always reduce
+		this.levels = [RIGHT]; // for default level 0 always shift
 		this.byToken = new Map;	// for looking up operators
 		this.byAlias = new Map;	// for looking up precedence by alias
 
-		for (let {direction, tokens, alias} of levels) {
+		for (let {type, tokens, alias} of levels) {
 			let level = this.levels.length;
-			this.levels.push(direction);
+			this.levels.push(type);
 			for (let token of tokens) {
 				if (this.byToken.has(token)) {
 					throw new Error('Token already has set precedence!');
@@ -48,16 +48,24 @@ export class PrecedenceTable {
 	// extract the precedence by looking at terminals in
 	// a production p of a given grammar
 	extractPrecedence(grammar, p) {
-		const [nt, symbols] = grammar.productions[p];
-		let max = 0;
-		for (let symbol of symbols) {
-			if (!grammar.terminals.has(symbol))
-				continue;
-			if (this.byToken.has(symbol) && this.byToken.get(symbol) > max)
-				max = this.byToken.get(symbol);
-		}
+        
+        if (grammar.attributes.has(p)) {
+            const {prec} = grammar.attributes.get(p);
+            if (this.byAlias.has(prec)) {
+                return this.byAlias.get(prec);
+            }
+        }
 
-		return max;
+        const [nt, symbols] = grammar.productions[p];
+        let max = 0;
+        for (let symbol of symbols) {
+            if (!grammar.terminals.has(symbol))
+                continue;
+            if (this.byToken.has(symbol) && this.byToken.get(symbol) > max)
+                max = this.byToken.get(symbol);
+        }
+
+        return max;   
 	}
 
 	// returns true if, given the left and right operators, one must shift

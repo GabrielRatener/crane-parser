@@ -30,6 +30,10 @@ export class SparseTable {
 		return `${y}-${x}`;
 	}
 
+	exists(y, x) {
+		return this.verify(y, x) && this._map.has(this.encode(y, x));
+	}
+
 	set(y, x, value) {
 		this.enforce(y, x);
 		const hash = this.encode(y, x);
@@ -48,6 +52,14 @@ export class SparseTable {
 			return this._map.get(hash);
 		} else {
 			return undefined;
+		}
+	}
+
+	* [Symbol.iterator]() {
+		for (let [key] of this._map) {
+			yield key
+				.split('-')
+				.map(e => parseInt(e))
 		}
 	}
 }

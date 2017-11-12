@@ -2,6 +2,18 @@
 import {Queue, SubSet} from "./collections"
 import {PrecedenceTable} from "./precedence"
 
+function getAttributes(production) {
+    const extra = {};
+    const ommit = new Set(['type', 'production', 'code']);
+    for (let key in production) {
+        if (production.hasOwnProperty(key) && !ommit.has(key)) {
+            extra[key] = production[key];
+        }
+    }
+    
+    return extra;
+}
+
 export const EOF = '$', EPS = '';
 
 export default class Grammar {
@@ -9,6 +21,7 @@ export default class Grammar {
 
 		// all properties and their objects should be considered read-only
 		// all modifications should only be made with the methods below
+        this.attributes = new Map();
 		this.root = null;
 		this.productions = [];
 		this.precedence = new PrecedenceTable(precedence);
@@ -17,8 +30,10 @@ export default class Grammar {
 		this.presenceFinder = new Map(); // maps symbol to list of productions where present
 		this._caches = {}; // for optimization
 
-		for (let [nonTerminal, production] of productions) {
-			this.addProduction(nonTerminal, production);
+		for (let item of productions) {
+            const {type, production} = item;
+            const attributes = getAttributes(item);
+			this.addProduction(type, production, attributes);
 		}
 
 		this.setRoot(0);
@@ -42,9 +57,13 @@ export default class Grammar {
 	}
 
 	// add production for non-terminal to grammar
-	addProduction(nonTerminal, production) {
+	addProduction(nonTerminal, production, attributes = {}) {
 		const id = this.productions.length;
 
+        if (Object.keys(attributes).length > 0) {
+            this.attributes.set(this.productions.length, attributes);
+        }
+        
 		if (!this.nonTerminals.has(nonTerminal)) {
 			this.nonTerminals.set(nonTerminal, []);
 			this.terminals.delete(nonTerminal);
