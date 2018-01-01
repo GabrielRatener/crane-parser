@@ -131,7 +131,7 @@ export default class Grammar {
 	// look no further, some really nasty code in there
 	isNullable(symbols, _seen = new SubSet()) {
 		outer:
-		for (let symbol of symbols) {
+		for (const symbol of symbols) {
 			if (this.terminals.has(symbol))
 				return false;
 			else {
@@ -207,11 +207,11 @@ export default class Grammar {
 		}
 	}
 
-	print(clump = true) {
+	print(clump = true, logger = console) {
 		const [rootNode] = this.productions[this.root];
 		if (clump) {
 			for (let [nonTerminal, indexes] of this.nonTerminals) {
-				console.log(
+				logger.log(
 					nonTerminal,
 					nonTerminal === rootNode ? '*' : '',
 					'->'
@@ -219,14 +219,14 @@ export default class Grammar {
 				for (let index of indexes) {
 					const [,symbols] = this.productions[index];
 					if (symbols.length === 0)
-						console.log(`\t''`)
+						logger.log(`\t''`)
 					else
-						console.log(`\t${symbols.join(' ')}`);
+						logger.log(`\t${symbols.join(' ')}`);
 				}
 			}
 		} else {
 			for (let [nonTerminal, symbols] of this.productions) {
-				console.log(
+				logger.log(
 					nonTerminal,
 					nonTerminal === rootNode ? '*' : '',
 					"->",

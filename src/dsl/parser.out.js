@@ -228,124 +228,124 @@ const productions = [
     ]
 ];
 const reducers = map({
-    3: $ => {
+    3: function ($) {
         return [$[0]];
     },
-    4: $ => {
+    4: function ($) {
         return $[0].concat($[2]);
     },
-    5: $ => {
+    5: function ($) {
         return {
             imported: $[0],
             local: $[0]
         };
     },
-    6: $ => {
+    6: function ($) {
         return {
             imported: $[0],
             local: $[2]
         };
     },
-    7: $ => {
+    7: function ($) {
         return [$[0]];
     },
-    8: $ => {
+    8: function ($) {
         var slice$ = [].slice;
         return slice$.call($[0]).concat([$[1]]);
     },
-    9: $ => {
+    9: function ($) {
         return {
             type: 'import',
             'default': $[2],
             path: $[4]
         };
     },
-    10: $ => {
+    10: function ($) {
         return {
             type: 'import',
             all: $[3],
             path: $[5]
         };
     },
-    11: $ => {
+    11: function ($) {
         return {
             type: 'import',
             dependencies: $[1],
             path: $[3]
         };
     },
-    15: $ => {
-        return $[0][0] === '"' ? $[0].slice(1, -1) : $[0].slice(1);
+    15: function ($) {
+        return $[0][0] === '\\' ? $[0].slice(1) : $[0].slice(1, -1);
     },
-    16: $ => {
+    16: function ($) {
         return [$[0]];
     },
-    17: $ => {
+    17: function ($) {
         var slice$ = [].slice;
         return slice$.call($[0]).concat([$[1]]);
     },
-    18: $ => {
+    18: function ($) {
         return {
             type: $[0].slice(1),
             tokens: $[1]
         };
     },
-    19: $ => {
+    19: function ($) {
         return {
             type: $[0].slice(1),
             alias: $[1],
             tokens: []
         };
     },
-    24: $ => {
+    24: function ($) {
         return [$[0]];
     },
-    25: $ => {
+    25: function ($) {
         var slice$ = [].slice;
         return slice$.call($[0]).concat([$[1]]);
     },
-    26: $ => {
+    26: function ($) {
         return [$[0]];
     },
-    27: $ => {
+    27: function ($) {
         var slice$ = [].slice;
         return slice$.call($[$[0]]).concat([$[$[2]]]);
     },
-    28: $ => {
+    28: function ($) {
         return {
             type: 'prec',
             value: $[1]
         };
     },
-    29: $ => {
+    29: function ($) {
         return {
             type: 'production',
             production: $[1],
             code: null
         };
     },
-    30: $ => {
+    30: function ($) {
         return {
             type: 'production',
             production: $[1],
             code: $[2]
         };
     },
-    31: $ => {
+    31: function ($) {
         return {
             type: 'production',
             production: [],
             code: null
         };
     },
-    32: $ => {
+    32: function ($) {
         return {
             type: 'production',
             production: [],
             code: $[2]
         };
     },
-    35: $ => {
+    35: function ($) {
         var production, type, value;
         return production = $[2], function () {
             var i$, ref$, len$, ref1$, results$ = [];
@@ -356,42 +356,42 @@ const reducers = map({
             return results$;
         }(), production;
     },
-    36: $ => {
+    36: function ($) {
         return [$[0]];
     },
-    37: $ => {
+    37: function ($) {
         var slice$ = [].slice;
         return slice$.call($[0]).concat([$[2]]);
     },
-    38: $ => {
+    38: function ($) {
         return {
             type: 'definition',
             name: $[0],
             body: $[2]
         };
     },
-    39: $ => {
+    39: function ($) {
         return [$[0]];
     },
-    40: $ => {
+    40: function ($) {
         var slice$ = [].slice;
         return slice$.call($[0]).concat([$[2]]);
     },
-    41: $ => {
+    41: function ($) {
         return {
             type: 'call',
             name: $[1],
             args: $[3]
         };
     },
-    42: $ => {
+    42: function ($) {
         return [$[0]];
     },
-    43: $ => {
+    43: function ($) {
         var slice$ = [].slice;
         return slice$.call($[0]).concat([$[1]]);
     },
-    44: $ => {
+    44: function ($) {
         return {
             type: 'or',
             list: $[1]
@@ -765,14 +765,6 @@ const lrTable = {
         '91-28': 82
     })
 };
-const reduce = (p, args, loc) => {
-    if (reducers.has(p)) {
-        const fn = reducers.get(p);
-        return fn(args, loc, p);
-    } else {
-        return args.length > 0 ? args[0] : [];
-    }
-};
 function map(obj, kFunc = k => k) {
     const mp = new Map();
     for (let key in obj)
@@ -853,13 +845,16 @@ export function accepts(token) {
 }
 export const defaults = {};
 export class Parser {
-    constructor(source = '', options = {}) {
+    constructor(source = '', context = {}, options = {}) {
+        this.context = context;
         this.settings = Object.assign(options);
         this.source = '';
         this.states = [0];
         this.stack = [];
         this.values = [];
         this.positions = [];
+        this.onreducestart = null;
+        this.onreduceend = null;
         this.lastPosition = {
             row: 1,
             column: 0
@@ -871,7 +866,7 @@ export class Parser {
         }
         this.addSource(source);
     }
-    showErr({row, column}, err) {
+    showErr(err, {row, column} = this.lastPosition) {
         const lines = this.source.split('\n');
         if (row <= lines.length && column < lines[row - 1].length) {
             const line = lines[row - 1];
@@ -891,18 +886,49 @@ export class Parser {
     _state() {
         return this.states[this.states.length - 1];
     }
+    _fire(eventType, data) {
+        const fn = this[`on${ eventType }`];
+        const internal = true;
+        if (typeof fn === 'function') {
+            fn.apply(this, [
+                data,
+                internal
+            ]);
+        }
+    }
     _reduce(rule) {
         const [symbol, length] = productions[rule];
         const nodes = this.values.splice(-length);
         const positions = this.positions.splice(-length);
         const lastPosition = positions.length === 0 ? null : positions[positions.length - 1];
         const loc = new Locator(positions, lastPosition, rule);
-        const ast = reduce(rule, nodes, loc);
+        this._fire('reducestart', {
+            rule,
+            nodes,
+            positions,
+            loc
+        });
+        if (reducers.has(rule)) {
+            const fn = reducers.get(rule);
+            this.values.push(fn.apply(this.context, [
+                nodes,
+                loc,
+                rule
+            ]));
+        } else {
+            this.values.push(nodes.length > 0 ? nodes[0] : []);
+        }
+        this._fire('reduceend', {
+            loc,
+            rule,
+            nodes,
+            positions,
+            node: this.values.length > 0 ? this.values[this.values.length - 1] : null
+        });
         this.states.splice(-length);
         this.states.push(lrTable.goto.get(`${ this._state() }-${ symbol }`));
         this.stack.splice(-length);
         this.stack.push(symbol);
-        this.values.push(ast);
         this.positions.push(Object.assign(loc));
     }
     addSource(txt) {
@@ -912,7 +938,7 @@ export class Parser {
         if (token.type === '$')
             throw Error(`Unexpected token "$", always use "finish" to complete parsing`);
         if (!translations.has(token.type) || translations.get(token.type) >= gotoStart)
-            this.showErr(new Error(`Invalid token type "${ token.type }"`));
+            this.showErr(new Error(`Invalid token type "${ token.type }"`), token.loc);
         else {
             const type = translations.get(token.type);
             while (true) {
@@ -934,7 +960,7 @@ export class Parser {
                         continue;
                     }
                 } else {
-                    this.showErr(token.loc, new Error(`Unexpected token "${ token.type }"`));
+                    this.showErr(new Error(`Unexpected token "${ token.type }"`), token.loc);
                 }
             }
         }
@@ -948,7 +974,7 @@ export class Parser {
                 const action = val[0];
                 const number = parseInt(val.slice(1));
                 if (action !== 'r')
-                    throw new Error(`Unexpected shift action, expected reduce oraccept`);
+                    throw new Error(`Unexpected shift action, expected reduce or accept`);
                 if (number === 0)
                     return this.values[0];
                 else {
@@ -956,7 +982,7 @@ export class Parser {
                     continue;
                 }
             } else {
-                throw new Error(`Unexpected end of imput`);
+                throw new Error(`Unexpected end of input`);
             }
         }
     }

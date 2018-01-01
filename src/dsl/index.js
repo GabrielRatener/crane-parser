@@ -89,19 +89,29 @@ function toGrammar(code, rootName = null, ctxt = {}) {
 	};
 
 	const context = {
+		// TODO: add @additional and @questionable
+
 		multiple([e], [sep] = [null]) {
 			const name = this.newId();
 
-			list.push({
-                type: name,
-                production: [this.resolve(e)],
-                code: '[$[0]]'
-            });
-            
+			list.push(...[
+				{
+					type: name,
+					production: [],
+					code: '[]'
+				},
+				{
+	                type: name,
+	                production: [this.resolve(e)],
+	                code: '[$[0]]'
+	            }
+            ]);
+
+
 			if (sep)
 				list.push({
                     type: name,
-                    production: [name, sep, this.resolve(e)],
+                    production: [name, this.resolve(sep), this.resolve(e)],
                     code: '[...$[0], $[2]]'
                 });
 			else

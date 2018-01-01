@@ -15,7 +15,7 @@ BodyLine:
 	Def
 
 String:
-	string		=> if $[0][0] == '"' then $[0].slice 1, -1 else $[0].slice 1
+	string		=> if $[0][0] == '\\' then $[0].slice 1 else $[0].slice 1, -1
 
 Precedence:
 	ass String				=> {type: $[0].slice 1, tokens: [$[1]]}

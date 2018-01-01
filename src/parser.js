@@ -54,17 +54,17 @@ export class ParsingTable {
 		}
 	}
 
-	print(tabsize = 4) {
+	print(tabsize = 4, logger = console) {
 		const term = Array.from(this.indexMappers.action);
 		const nonterm = Array.from(this.indexMappers.goto);
 		const tabulate = (value = '', length = 4) => {
 			if (value.length > length)
 				throw new Error('Too long to tabulate!')
 			const str = "" + value;
-			return `${" ".repeat(length - value.length)}${value}`;			
+			return `${value}${" ".repeat(length - str.length)}`;			
 		};
 
-		console.log(
+		logger.log(
 			tabulate('', tabsize),
 			'|',
 			term
@@ -77,7 +77,7 @@ export class ParsingTable {
 			);
 
 		for (let i = 0; i < this.length; i++) {
-			console.log(
+			logger.log(
 				tabulate(i, tabsize),
 				'|',
 				term

@@ -55,7 +55,7 @@ const total = [
 		type: 'ws'
 	},
 	{
-		pattern: /\\[^\n \t]+/,
+		pattern: /\\[^\n \t\(\)\[\]\{\}\,]+/,
 		type: 'string'
 	},
 	{
@@ -88,6 +88,30 @@ const total = [
 				this.string += c;
 
 				if (c === '"' && !escape)
+					return;
+
+				if (escape)
+					escape = false;
+				if (c === '\\')
+					escape = true;
+
+			}
+
+			throw new Error('Unexpected EOF!');
+		}
+	},
+	{
+		pattern: "'",
+		type: 'string',
+		fetch (cursor) {
+			let escape = false;
+			this.string = "'";
+			while (!cursor.end()) {
+				let c = cursor.next();
+
+				this.string += c;
+
+				if (c === "'" && !escape)
 					return;
 
 				if (escape)

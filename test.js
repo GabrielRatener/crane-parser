@@ -27,7 +27,16 @@ const depad = (str) => {
 const language = (source) => {
     const grammar = depad(source);
     const name = 'fuckery';
-    const parserSource = generate(grammar);
+    const logs = [];
+    const options = {
+        debug: true,
+        logger: {
+            log(...args) {
+                logs.push(args);
+            }
+        }
+    };
+    const parserSource = generate(grammar, options);
     const {code} = transform(parserSource, {
         plugins: ["transform-es2015-modules-commonjs"]
     });
@@ -42,7 +51,9 @@ const language = (source) => {
     return {
         grammar,
         generated: (runInNewContext(code, context), context['exports']),
-        parse(text) {
+        parse(text, debug = false) {
+            // TODO: debug this
+
             const parsing = new this.generated.Parser(text);
             const prototype = {
                 get loc() {
@@ -61,22 +72,53 @@ const language = (source) => {
                 }
             };
 
+            const showStack = () => {
+                if (debug) {
+                    const [start, ...states] = parsing.states.slice(0);
+                    const stack = parsing.stack.slice(0);
+                    let both = [];
+
+                    for (let i = 0; i < stack.length; i++) {
+                        const symbol = this.generated.untranslate(stack[i]);
+
+                        both.push(`${colors.blue(symbol)} ${states[i]}`);
+                    }
+
+                    console.log(`${start} ${both.join(' ')}`);
+                }
+            }
+
+
+            parsing.onreduceend = () => {
+                if (debug)
+                    console.log('now')
+                showStack();
+            }
+
+            showStack();
+
             for (let token of lexer.tokenize(text)) {
                 if (token.type !== 'ws') {
                     Object.setPrototypeOf(token, prototype);
 
                     parsing.push(token);
+                    showStack();
                 }
             }
 
             return parsing.finish();
+        },
+        log() {
+            for (const log of logs) {
+                console.log(...log);
+            }
         }
     }
 }
 
 const lexer = new Lexer([
     {
-        regex: /[\+\-\*\/\^\(\)\%\,]/
+        regex: /[\+\-\*\/\^\(\)\%\,\|\&\[\]\{\}]/
     },
     {
         regex: /[0-9]+/,

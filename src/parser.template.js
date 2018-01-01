@@ -60,13 +60,14 @@ class Locator {
 	}
 
 	// compute with first and last only
-	fast(positions, last) {
+	fast(positions, prev = {line: 1, column: 0}) {
 		switch (positions.length) {
 			case 0:
 				return {
-					start: last,
-					end: last
+					start: prev,
+					end: prev
 				};
+
 			case 1:
 				return positions[0];
 			default:
@@ -134,6 +135,13 @@ class Locator {
 	}
 }
 
+export function untranslate(n) {
+	for (const [key, value] of translations) {
+		if (value === n)
+			return key;
+	}
+}
+
 export function accepts(token) {
 	return translations.has(token) && translations.get(token) < gotoStart;
 }
@@ -171,7 +179,7 @@ export class Parser {
 		this.addSource(source);
 	}
 
-	showErr({row, column}, err) {
+	showErr(err, {row, column} = this.lastPosition) {
 		const lines = this.source.split('\n');
 
 		if (row <= lines.length && column < lines[row - 1].length) {
@@ -205,11 +213,11 @@ export class Parser {
 		}
 	}
 
-	_reduce(rule) {
+	_reduce(rule) {;
 		const [symbol, length] = productions[rule];
-		const nodes = this.values.splice(-length);
-		const positions = this.positions.splice(-length);
-		const lastPosition = (positions.length === 0) ? null : positions[positions.length - 1];
+		const nodes = this.values.splice(-length || this.values.length);
+		const positions = this.positions.splice(-length || this.positions.length);
+		const lastPosition = (this.positions.length === 0) ? null : this.positions[this.positions.length - 1];
 		const loc = new Locator(positions, lastPosition, rule);
 
 		this._fire('reducestart', {
@@ -223,7 +231,7 @@ export class Parser {
 			const fn = reducers.get(rule);
 			this.values.push(fn.apply(this.context, [nodes, loc, rule]));
 		} else {
-			this.values.push(nodes.length > 0 ? args[0] : []);
+			this.values.push(nodes.length > 0 ? nodes[0] : []);
 		}
 
 		this._fire('reduceend', {
@@ -236,9 +244,9 @@ export class Parser {
 				null
 		});
 
-		this.states.splice(-length);
+		this.states.splice(-length || this.states.length);
 		this.states.push(lrTable.goto.get(`${this._state()}-${symbol}`));
-		this.stack.splice(-length);
+		this.stack.splice(-length || this.stack.length);
 		this.stack.push(symbol);
 		this.positions.push(Object.assign(loc));
 	}
@@ -247,17 +255,18 @@ export class Parser {
 		this.source += txt;
 	}
 
-	push(token) {
+	push(token, logger = null) {
 		if (token.type === '$')
 			throw Error(`Unexpected token "$", always use "finish" to complete parsing`);
 
 		if (!translations.has(token.type) || translations.get(token.type) >= gotoStart)
-			this.showErr(new Error(`Invalid token type "${token.type}"`));
+			this.showErr(new Error(`Invalid token type "${token.type}"`), token.loc);
 		else {
 			const type = translations.get(token.type);
 
 			while (true) {
 				const key = `${this._state()}-${type}`;
+
 				if (lrTable.action.has(key)) {
 					const val = lrTable.action.get(key);
 					const action = val[0];
@@ -280,13 +289,14 @@ export class Parser {
 						continue;
 					}
 				} else {
-					this.showErr(token.loc, new Error(`Unexpected token "${token.type}"`));
+
+					this.showErr(new Error(`Unexpected token "${token.type}"`), token.loc);
 				}
 			}
 		}
 	}
 
-	finish() {
+	finish(logger = null) {
 		const type = translations.get('$');
 
 		while (true) {
@@ -297,7 +307,7 @@ export class Parser {
 				const number = parseInt(val.slice(1));
 				
 				if (action !== 'r')
-					throw new Error(`Unexpected shift action, expected reduce oraccept`);
+					throw new Error(`Unexpected shift action, expected reduce or accept`);
 
 				if (number === 0)
 					return this.values[0];
@@ -308,7 +318,7 @@ export class Parser {
 				}
 
 			} else {
-				throw new Error(`Unexpected end of imput`);
+				throw new Error(`Unexpected end of input`);
 			}
 		}
 	}

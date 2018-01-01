@@ -9,9 +9,16 @@ export {default as Lexer} from "./dsl/lexer"
 export {table};
 
 // compile a string of crane grammar to a JS parser
-export default function generate(code, rootName, context = {}) {
+export default function generate(code, options) {
+	const {rootName, context = {}, debug = false, logger = console} = options;
     const {actions, grammar, dependencies} = compile(code, rootName, context);
     const map = new Map(Object.entries(actions).map(([k, v]) => [parseInt(k), v]));
+    const parseTable = table(grammar);
+
+    if (debug) {
+    	grammar.print(false, logger);
+   		parseTable.print(8, logger);
+	}
     
-    return makeCode(table(grammar), map, dependencies);
+    return makeCode(parseTable, map, dependencies);
 }

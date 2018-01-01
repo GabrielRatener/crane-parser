@@ -43,7 +43,7 @@ const setify = function(iterable) {
 export function clr(grammar, log = false) {
 	function lookaheads(prev, current) {
 		const [lastP, offset, set] = prev;
-		const [nowP,] = current;
+		const [nowP] = current;
 
 		const [nt, pro] = grammar.productions[lastP];
 

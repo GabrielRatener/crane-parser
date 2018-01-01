@@ -19,6 +19,6 @@ const code = readFileSync(path, 'utf8');
 const output =
   tangler
     .require(`${__dirname}/../src/index.js`)
-    .default(code, root || null);
+    .default(code, {rootName: root || null});
 
 console.log(output);
