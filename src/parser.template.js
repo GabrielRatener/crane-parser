@@ -13,6 +13,7 @@
 
 
 const {min, max} = Math;
+const {freeze} = Object;
 
 // starting x index of goto part of table
 const gotoStart = <%= gotoStart %>;
@@ -51,90 +52,6 @@ function map(obj, kFunc = (k) => k) {
 	return mp;
 }
 
-class Locator {
-	constructor(positions, prev, rule) {
-		const {start, end} = this.default(positions, prev, rule);
-		
-		this.start = start;
-		this.end = end;
-	}
-
-	// compute with first and last only
-	fast(positions, prev = {line: 1, column: 0}) {
-		switch (positions.length) {
-			case 0:
-				return {
-					start: prev,
-					end: prev
-				};
-
-			case 1:
-				return positions[0];
-			default:
-				const first = positions[0];
-				const last = positions[positions.length - 1];
-
-				return {
-					start: {
-						line: first.start.line,
-						column: first.start.column
-					},
-					end: {
-						line: last.end.line,
-						column: last.end.column
-					}
-				};
-		}
-	}
-
-	// take running max/min using all positions
-	slow(positions, last) {
-		const loc = {
-			start: {
-				line: Infinity,
-				column: Infinity
-			},
-			end: {
-				line: 1,
-				column: 0
-			}
-		}
-
-		if (nodes.length === 0) {
-			loc.start = loc.end = last;
-		} else {
-			let count = 0;
-			for (let pos of positions) {
-				if (pos) {
-					if (pos.start.line <= loc.start.line) {
-						loc.start.line = pos.start.line;
-						loc.start.column = min(loc.start.column, pos.start.column);
-					}
-
-					if (pos.end.line >= loc.end.line) {
-	                    loc.end.line = pos.end.line;
-	                    loc.end.column = max(loc.end.column, pos.end.column);
-					}
-
-					count++;
-				}
-			}
-
-			if (count === 0) {
-				loc.start = loc.end = last;
-			}
-		}
-
-		return loc;
-	}
-
-
-
-	default(...args) {
-		return this.fast(...args);
-	}
-}
-
 export function untranslate(n) {
 	for (const [key, value] of translations) {
 		if (value === n)
@@ -150,11 +67,42 @@ export function accepts(token) {
 export const defaults = {
 }
 
+class ParsingError extends Error {
+	constructor(parsing, message = '') {
+		super();
+
+		const [type] = this.constructor.name.split('$');
+
+		this.type = type;
+		this.message = `${this.type}: ${message}`;
+		this.parsing = parsing;
+		this.loc = parsing.lastPosition;
+	}
+}
+
+class UnexpectedTokenError extends ParsingError {
+	constructor(parsing, token, message = `Unexpected "${token.type}" token`) {
+		super(parsing, message);
+		this.loc = parsing._locateToken(token);
+		this.token = token;
+	}
+}
+
+class UnexpectedEndError extends ParsingError {
+	constructor(parsing, message = "Encountered EOF but expected more tokens") {
+		super(parsing, message);
+	}
+}
+
+class InvalidTokenError extends UnexpectedTokenError {
+	constructor(parsing, token, message = `Invalid token type: "${token.type}"`) {
+		super(parsing, token, message);
+	}
+}
+
 export class Parser {
-	constructor(source = "", context = {}, options = {}) {
+	constructor({context = {}} = {}) {
 		this.context = context;
-		this.settings = Object.assign(options);
-		this.source = "";
 
 		// stacks
 		this.states = [0]; // initially state 0		
@@ -168,36 +116,11 @@ export class Parser {
 		this.lastPosition = {
 			row: 1,
 			column: 0
-		}
+		};
 
-		for (let key in defaults) {
-			if (defaults.hasOwnProperty(key) && !options.hasOwnProperty(key)) {
-				this.settings[key] = defaults[key];
-			}
-		}
-
-		this.addSource(source);
-	}
-
-	showErr(err, {row, column} = this.lastPosition) {
-		const lines = this.source.split('\n');
-
-		if (row <= lines.length && column < lines[row - 1].length) {
-			const line = lines[row - 1];
-			let ws = '';
-
-			for (let c of line) {
-				if (c === '\t') {
-					ws += '\t';
-				} else {
-					ws += ' ';
-				}
-			}
-
-			throw new Error(`${err.name}: ${err.message}\n\n${line}\n${ws}^\n`);
-		} else {
-			throw err;
-		}
+		this.settings = {
+			locate: false
+		};
 	}
 
 	_state() {
@@ -213,12 +136,36 @@ export class Parser {
 		}
 	}
 
+	_locate(positions) {
+		if (positions.length === 0) {
+			return freeze({
+				start: this.lastPosition,
+				end: this.lastPosition
+			});
+		} else {
+			return freeze({
+				start: positions[0],
+				end: positions[positions.length - 1]
+			});
+		}
+	}
+
+	_locateToken(token) {
+		if (token.loc == null) {
+			return freeze({
+				start: this.lastPosition,
+				end: this.lastPosition
+			});
+		} else {
+			return token.loc;
+		}
+	}
+
 	_reduce(rule) {;
 		const [symbol, length] = productions[rule];
 		const nodes = this.values.splice(-length || this.values.length);
 		const positions = this.positions.splice(-length || this.positions.length);
-		const lastPosition = (this.positions.length === 0) ? null : this.positions[this.positions.length - 1];
-		const loc = new Locator(positions, lastPosition, rule);
+		const loc = this._locate(positions);
 
 		this._fire('reducestart', {
 			rule,
@@ -248,7 +195,7 @@ export class Parser {
 		this.states.push(lrTable.goto.get(`${this._state()}-${symbol}`));
 		this.stack.splice(-length || this.stack.length);
 		this.stack.push(symbol);
-		this.positions.push(Object.assign(loc));
+		this.positions.push(loc);
 	}
 
 	addSource(txt) {
@@ -256,11 +203,8 @@ export class Parser {
 	}
 
 	push(token, logger = null) {
-		if (token.type === '$')
-			throw Error(`Unexpected token "$", always use "finish" to complete parsing`);
-
 		if (!translations.has(token.type) || translations.get(token.type) >= gotoStart)
-			this.showErr(new Error(`Invalid token type "${token.type}"`), token.loc);
+			throw new InvalidTokenError(this, token);
 		else {
 			const type = translations.get(token.type);
 
@@ -273,12 +217,13 @@ export class Parser {
 					const number = parseInt(val.slice(1));
 
 					if (action === 's') {
+						const loc = this._locateToken(token);
+
 						this.states.push(number);
 						this.stack.push(type);
-						this.values.push(token.value == null ? token.string : token.value);
-						this.positions.push(token.loc);
-
-						this.lastPosition = token.loc.end;
+						this.values.push(token.value);
+						this.positions.push(loc);
+						this.lastPosition = loc.end;
 
 						return;
 					}
@@ -289,8 +234,7 @@ export class Parser {
 						continue;
 					}
 				} else {
-
-					this.showErr(new Error(`Unexpected token "${token.type}"`), token.loc);
+					throw new UnexpectedTokenError(this, token);
 				}
 			}
 		}
@@ -307,7 +251,7 @@ export class Parser {
 				const number = parseInt(val.slice(1));
 				
 				if (action !== 'r')
-					throw new Error(`Unexpected shift action, expected reduce or accept`);
+					throw new UnexpectedEndError(this);
 
 				if (number === 0)
 					return this.values[0];
@@ -318,7 +262,7 @@ export class Parser {
 				}
 
 			} else {
-				throw new Error(`Unexpected end of input`);
+				throw new UnexpectedEndError(this);
 			}
 		}
 	}

@@ -302,7 +302,7 @@ function toGrammar(code, rootName = null, ctxt = {}) {
 // compiles a crane DSL string to a grammar and action table
 // compatible with the crane API with the specified root production
 export function compile(string, name, context) {
-	const parsing = new Parser(string);
+	const parsing = new Parser({source: string});
 	let result = null;
 
 	for (let token of sanitize(string + '\n')) {

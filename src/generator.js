@@ -40,19 +40,22 @@ const setify = function(iterable) {
 // all these functions take in a grammar and output a parsing table
 
 // LR(1) generator
-export function clr(grammar, log = false) {
-	function lookaheads(prev, current) {
+export function clr(grammar, logger = null) {
+	function lookaheads(prev) {
 		const [lastP, offset, set] = prev;
-		const [nowP] = current;
-
 		const [nt, pro] = grammar.productions[lastP];
+		const v = pro.slice(offset + 1);
 
-		const s = setify(grammar.first(pro.slice(offset + 1)));
+		if (v.length === 0)
+			return setify(set);
+		else {
+			const s = setify(grammar.first(v));
 
-		if (s.size === 0)
-			return set;
-		else
-			return s;
+			if (grammar.isNullable(v))
+				return new Set([...s, ...set]);
+			else
+				return s;
+		}
 	}
 
 	function* closure(p, o, set, seen = new Set) {
@@ -73,8 +76,6 @@ export function clr(grammar, log = false) {
 
 				for (let index of grammar.nonTerminals.get(symbol)) {
 					const [,prod] = grammar.productions[index];
-	
-
 					const lahSet = lookaheads([p, o, set], [index, 0]);
 
 					yield* closure(index, 0, lahSet, seen);
@@ -140,8 +141,8 @@ export function clr(grammar, log = false) {
 		const sPrec = grammar.precedence.getPrecedence(lookahead);
 		const rPrec = grammar.precedence.extractPrecedence(grammar, prod);
 
-		//console.log('resolving...')
-		//console.log([prod, rPrec], [lookahead, sPrec])
+		//logger.log('resolving...')
+		//logger.log([prod, rPrec], [lookahead, sPrec])
 
 		if (rPrec < sPrec) {
 			row.set(lookahead, shift);
@@ -163,7 +164,7 @@ export function clr(grammar, log = false) {
 	const table = new ParsingTable(grammar);
 	const rows = new Map();
 	const queue = new Queue();
-	const forwarding = new Map
+	const forwarding = new Map;
 	let index = 0;
 
 	queue.enqueue([[grammar.root, 0, new Set('$')]]);
@@ -181,15 +182,15 @@ export function clr(grammar, log = false) {
 			const i		= index++;
 			rows.set(pid, [i, row]);
 
-			if (log)
-				console.log(`\nstate (${i}):`)
+			if (logger)
+				logger.log(`\nstate (${i}):`)
 
 			const nextTable = new Map;
 			const forwards = new Map;
 			for (let [prod, off, lah] of item(states)) {
 				const [nt, production] = grammar.productions[prod];
-				if (log)
-					console.log(
+				if (logger)
+					logger.log(
 						'\t',
 						nt,
 						'->',

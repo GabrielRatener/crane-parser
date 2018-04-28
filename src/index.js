@@ -13,7 +13,7 @@ export default function generate(code, options) {
 	const {rootName, context = {}, debug = false, logger = console} = options;
     const {actions, grammar, dependencies} = compile(code, rootName, context);
     const map = new Map(Object.entries(actions).map(([k, v]) => [parseInt(k), v]));
-    const parseTable = table(grammar);
+    const parseTable = table(grammar, debug ? logger : null);
 
     if (debug) {
     	grammar.print(false, logger);
