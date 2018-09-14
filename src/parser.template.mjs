@@ -101,8 +101,14 @@ class InvalidTokenError extends UnexpectedTokenError {
 }
 
 export class Parser {
-	constructor({context = {}} = {}) {
+	constructor(options = {}) {
+		const {
+			context = {},
+			tokenTranslator = ((token) => token.value)
+		} = options;
+
 		this.context = context;
+		this.tokenTranslator = tokenTranslator;
 
 		// stacks
 		this.states = [0]; // initially state 0		
@@ -143,10 +149,10 @@ export class Parser {
 				end: this.lastPosition
 			});
 		} else {
-			return freeze({
-				start: positions[0],
-				end: positions[positions.length - 1]
-			});
+			const {start} = positions[0];
+			const {end} = positions[positions.length - 1];
+
+			return freeze({start, end});
 		}
 	}
 
@@ -221,7 +227,7 @@ export class Parser {
 
 						this.states.push(number);
 						this.stack.push(type);
-						this.values.push(token.value);
+						this.values.push(this.tokenTranslator(token));
 						this.positions.push(loc);
 						this.lastPosition = loc.end;
 

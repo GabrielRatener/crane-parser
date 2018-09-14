@@ -2,6 +2,9 @@
 Root:
 	Grammar
 
+Id:
+    id  => @node.id {name: $[0]}
+
 Grammar:
 	Body
 	Body endl
@@ -11,17 +14,17 @@ Body:
 	Body endl BodyLine		=> $[0].concat $[2]
 
 Specifier:
-    id          => {imported: $[0], local: $[0]}
-    id ":" id   => {imported: $[0], local: $[2]}
+    Id          => @node.specifier {imported: $[0], local: $[0]}
+    Id ":" Id   => @node.specifier {imported: $[0], local: $[2]}
     
 SpecifierList:
     Specifier                   => [$[0]]
     SpecifierList Specifier     => [...$[0], $[1]]
 
 Import:
-    import ":" id from String            => {type: 'import', default: $[2], path: $[4]}
-    import "*" ":" id from String        => {type: 'import', all: $[3], path: $[5]}
-    import SpecifierList from String     => {type: 'import', dependencies: $[1], path: $[3]}
+    import ":" Id from String            => @node.import {default: $[2], path: $[4]}
+    import "*" ":" Id from String        => @node.import {all: $[3], path: $[5]}
+    import SpecifierList from String     => @node.import {dependencies: $[1], path: $[3]}
 
 BodyLine:
     Import
@@ -29,22 +32,22 @@ BodyLine:
     Def
 
 String: 
-    string		=> if $[0][0] == '\\' then $[0].slice 1 else $[0].slice 1, -1
+    string		=> @node.string {value: if $[0][0] == '\\' then $[0].slice 1 else $[0].slice 1, -1}
 
 StringList:
     String              => [$[0]]
     StringList String   => [...$[0], $[1]]
 
 Precedence:
-    ass StringList	=> {type: $[0].slice(1), tokens: $[1]}
-    ass id          => {type: $[0].slice(1), alias: $[1], tokens: []}
+    ass StringList	=> @node[$[0].slice(1)] {tokens: $[1]}
+    ass Id          => @node[$[0].slice(1)] {alias: $[1], tokens: []}
 
 
 Expression:
 	CallExpression
 	OrExpression
 	String
-	id
+	Id
 
 ExpressionList:
 	Expression	=> [$[0]]
@@ -55,13 +58,13 @@ AttributeList:
     AttributeList endl Attribute    => $[...$[0], $[2]]
 
 Attribute:
-    prec id                     => {type: 'prec', value: $[1]}
+    prec Id                     => @node.prec {value: $[1]}
 
 Production:
-	">" ExpressionList			=> {type: 'production', production: $[1], code: null}
-	">" ExpressionList code		=> {type: 'production', production: $[1], code: $[2]}
-	">" eps						=> {type: 'production', production: [], code: null}
-	">" eps	code				=> {type: 'production', production: [], code: $[2]}
+	">" ExpressionList			=> @node.production {production: $[1], code: null}
+	">" ExpressionList code		=> @node.production {production: $[1], code: $[2]}
+	">" eps						=> @node.production {production: [], code: null}
+	">" eps	code				=> @node.production {production: [], code: $[2]}
 
 DefLine:
     Def
@@ -77,18 +80,18 @@ DefLines:
 	DefLines endl DefLine	=> [...$[0], $[2]]
 
 Def:
-	id indent DefLines dedent	=> {type: "definition", name: $[0], body: $[2]}
+	Id indent DefLines dedent	=> @node.definition {name: $[0], body: $[2]}
 
 Args:
 	ExpressionList				=> [$[0]]
 	Args "," ExpressionList		=> [...$[0], $[2]]
 
 CallExpression:
-	"@" id "(" Args ")"			=> {type: "call", name: $[1], args: $[3]}
+	"@" Id "(" Args ")"			=> @node.call {name: $[1], args: $[3]}
 
 OrList:
 	String			=> [$[0]]
 	OrList String	=> [...$[0], $[1]]
 
 OrExpression:
-	"[" OrList "]"	=> {type: "or", list: $[1]}
+	"[" OrList "]"	=> @node.or {list: $[1]}

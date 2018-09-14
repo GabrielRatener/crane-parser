@@ -1,15 +1,16 @@
 
-import {runInNewContext} from "vm"
-import {readFileSync, readdirSync} from "fs"
-import {rollup} from "rollup"
-import {transform} from "babel-core"
+import vm from "vm"
+import path from "path"
+import fs from "fs"
+import babel from "babel-core"
 import colors from "colors"
 import generate, {Lexer} from "./src"
-
 
 const {min, max, round, random} = Math;
 
 const pass = colors.green('\u2714'), fail = colors.red('\u2718');
+
+const dirname = path.dirname(new URL(import.meta.url).pathname);
 
 const depad = (str) => {
     const lined = str.split('\n');
@@ -37,7 +38,7 @@ const language = (source) => {
         }
     };
     const parserSource = generate(grammar, options);
-    const {code} = transform(parserSource, {
+    const {code} = babel.transform(parserSource, {
         plugins: ["transform-es2015-modules-commonjs"]
     });
 
@@ -50,11 +51,11 @@ const language = (source) => {
  
     return {
         grammar,
-        generated: (runInNewContext(code, context), context['exports']),
+        generated: (vm.runInNewContext(code, context), context['exports']),
         parse(text, debug = false) {
             // TODO: debug this
 
-            const parsing = new this.generated.Parser(text);
+            const parsing = new this.generated.Parser();
             const prototype = {
                 get loc() {
                     const begin = {
@@ -174,9 +175,9 @@ const context = {
     }
 }
 
-for (let node of readdirSync("./tests")) {
+for (let node of fs.readdirSync("./tests")) {
     if (node.endsWith('.js')) {
         file = node.slice(0, -3);
-        runInNewContext(readFileSync(`${__dirname}/tests/${node}`, 'utf8'), context);    
+        vm.runInNewContext(fs.readFileSync(`${dirname}/tests/${node}`, 'utf8'), context);    
     }
 }

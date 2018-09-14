@@ -70,6 +70,9 @@ export default class Grammar {
 		}
 
 		for (let symbol of production) {
+			if (typeof symbol !== "string")
+				throw new Error(`Invalid symbol type "${typeof symbol}" in production`);
+
 			if (!this.presenceFinder.has(symbol)) {
 				this.presenceFinder.set(symbol, []);
 			}
@@ -91,10 +94,19 @@ export default class Grammar {
 	}
 
 	* getProductions(nonTerminal) {
-		for (let index of this.nonTerminals.get(nonTerminal)) {
-			//console.log(index);
-			const [,production] = this.productions[index];
-			yield production;
+
+		try {
+			for (let index of this.nonTerminals.get(nonTerminal)) {
+				//console.log(index);
+				const [,production] = this.productions[index];
+				yield production;
+			}
+
+		} catch (e) {
+			console.log(nonTerminal, nonTerminal.length);
+			console.log(this.nonTerminals);
+
+			throw e;
 		}
 	}
 

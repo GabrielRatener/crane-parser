@@ -1,5 +1,5 @@
 
-import {readFileSync} from "fs"
+import fs from "fs"
 import {sanitize, raw} from "./postprocess"
 import {Parser} from "./parser.out"
 
@@ -16,7 +16,7 @@ a:
 
 */
 
-const source = readFileSync(`${__dirname}/history/dsl.1.grammar`, 'utf8');
+const source = fs.readFileSync(`${__dirname}/history/dsl.1.grammar`, 'utf8');
 const parser = new Parser(source);
 
 for (let token of sanitize(source)) {

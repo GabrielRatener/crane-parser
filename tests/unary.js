@@ -64,7 +64,7 @@
     test("Unary precedence", (api) => {
         api.eq(parse('- 4 + 2'), -2);
         api.eq(parse('% 107 % 21'), 7);
-        api.eq(parse('- 4 + 2', false), -6);
-        api.eq(parse('% 107 % 21', false), 2);
+        api.eq(parse('- 4 + 2', false), -2);
+        api.eq(parse('% 107 % 21', false), 7);
     });
 }

@@ -27,6 +27,9 @@ export class ParsingTable {
 		};
 
 		for (let terminal of grammar.terminals) {
+			if (terminal === undefined)
+				console.error('found undefined terminal');
+
 			this.indexMappers.action.set(terminal, index);
 			index++;
 		}
@@ -55,6 +58,8 @@ export class ParsingTable {
 	}
 
 	print(tabsize = 4, logger = console) {
+		return;
+
 		const term = Array.from(this.indexMappers.action);
 		const nonterm = Array.from(this.indexMappers.goto);
 		const tabulate = (value = '', length = 4) => {

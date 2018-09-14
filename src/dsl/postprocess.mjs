@@ -1,8 +1,8 @@
 
-import {StringSource} from "./source"
-import {scan, parseLn} from "./scanner"
+import lexer, {parseLn, lex} from "./lexer"
 import {Queue} from "../collections"
 
+/*
 function* locate(tokens) {
 	let location = {
 		line: 1,
@@ -29,6 +29,7 @@ function* locate(tokens) {
 		yield token;
 	}
 }
+*/
 
 function empty(type, loc, value = '') {
 	return {string: '', type, value, loc};
@@ -40,11 +41,10 @@ export function raw(string) {
     return scan(src);
 }
 
-export function* sanitize(string) {
-	const src = new StringSource(string);
+export function* tokenize(string) {
 	const top = () => indents.length > 0 ? indents[indents.length - 1] : 0;
-    const iter = locate(scan(src));
     const tq = new Queue();
+    const iter = lex(string);
     const getNext = () => {
         const {done, value} = iter.next();
         

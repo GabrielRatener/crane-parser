@@ -361,7 +361,8 @@ export function* getTokensFromCursor(cursor) {
 	threshold 	= 3,
 	stress 		= 0,
 	trail		= [],
-	token 		= "";
+	token 		= "",
+	previous	= null;
 
 	while (!cursor.end()) {
 		let
@@ -375,10 +376,10 @@ export function* getTokensFromCursor(cursor) {
 			if (match) { // last token to be generated
 			    match.position = pos;
 				trail.push(match.type);
-				yield match;
+				yield previous = match;
 				break;
 			} else if (prevmatch === null) {
-				throw new Error("No tokens found!");
+				throw new Error(`No tokens after:\n${JSON.stringify(previous, null, 4)}`);
 			}
 		}
 
@@ -399,7 +400,7 @@ export function* getTokensFromCursor(cursor) {
                     pos = cursor.position();
 
 					trail.push(prevmatch.type);
-					yield prevmatch;
+					yield previous = prevmatch;
 
 					prevmatch = null;
 					token = "";

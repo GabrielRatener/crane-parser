@@ -1,6 +1,5 @@
 
-import {writeFileSync} from "fs"
-import {sanitize} from "./postprocess"
+import {tokenize as sanitize} from "./postprocess"
 import {clr} from "../generator"
 import {generate} from "../code-gen"
 import Grammar from "../grammar"

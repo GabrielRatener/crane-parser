@@ -1,11 +1,14 @@
 
-import {readFileSync, writeFileSync} from "fs"
+import fs from "fs"
+import path from "path"
 import escodegen from "escodegen"
+import babel from "babel-core"
 import estemplate from "estemplate"
+import treeTools from "esprima-ast-utils"
 import * as js from "./js-nodes"
 
-
-const template = readFileSync(__dirname + '/parser.template.js', 'utf8');
+const dirname = path.dirname(new URL(import.meta.url).pathname);
+const template = fs.readFileSync(dirname + '/parser.template.mjs', 'utf8');
 
 function node(type, props) {
 	const obj = {};
@@ -130,7 +133,7 @@ export function generate(lrTable, actions = new Map(), imports = []) {
     }
     
     ast.body = [...declarations, ...ast.body];
-    //console.log(JSON.stringify(ast, null, 4));
+
 	return escodegen.generate(ast, {
 		comment: true
 	});
