@@ -2,7 +2,7 @@
   "name": "crane-parser",
   "version": "1.0.0",
   "description": "LR parsing with a hint of saffron",
-  "main": "index.js",
+  "main": "./src/index.mjs",
   "directories": {
     "test": "test"
   },
