@@ -1,11 +1,108 @@
 
+import vm from "vm"
 import ls from "livescript"
 import acorn from "acorn"
+import escodegen from "escodegen"
 import {Parser} from "./parser.out"
 import {tokenize} from "./postprocess"
+import {clr} from "../generator"
 import {SubSet, Queue} from "../collections"
 import Grammar from "../grammar"
+import parserFactory, {mapToFunction} from "../parser-factory"
 import {LEFT, RIGHT, NONE, PrecedenceTable} from "../precedence"
+
+// a crane grammar is mostly a grammar/actionset tuple
+class CraneGrammar {
+    constructor(grammar, actions = {}, dependencies = []) {
+        this.grammar = grammar;
+        this.actions = actions;
+        this.dependencies = dependencies;
+        this.sourceLineMappings =
+        	new Array(grammar.productions.length).fill(-1);
+    }
+
+    addSourceLineMapping(production, line) {
+    	this.sourceLineMappings[production] = line;
+    }
+
+    generateParsingTable(debug = false) {
+    	return clr(this.grammar.clone(), debug);
+    }
+}
+
+// in a cold crane grammar actions are represented as JS ASTs
+class ColdCraneGrammar extends CraneGrammar {
+    constructor(grammar, actions = {}, dependencies = []) {
+    	super(grammar, actions, dependencies);
+    }
+
+    getActionAST() {
+    	const properties = [];
+
+    	for (const key in this.actions) {
+    		if (this.actions.hasOwnProperty(key)) {
+    			properties.push({
+    				type: 'Property',
+    				key: {
+    					type: 'Literal',
+    					value: parseInt(key, 10)
+    				},
+    				value: this.actions[key],
+    				kind: 'init',
+    				method: false,
+    				shorthand: false,
+    				computed: true
+    			});
+    		}
+    	}
+
+    	return {
+    		type: 'ObjectExpression',
+    		properties
+    	}
+    }
+
+    cook() {
+    	// escodegen expects a program ast
+    	const ast = {
+    		type: 'Program',
+    		body: [{
+    			type: 'ExpressionStatement',
+    			expression: this.getActionAST()
+    		}]
+    	};
+    	const code = escodegen.generate(ast);
+    	const object = vm.runInNewContext(code, {});
+    	const cooked = new HotCraneGrammar(this.grammar, object, this.dependencies);
+
+    	cooked.sourceLineMappings = this.sourceLineMappings;
+    	cooked.origin = this;
+
+    	return cooked;
+    }
+}
+
+// for a hot crane grammar actions are JS functions
+class HotCraneGrammar extends CraneGrammar {
+	constructor(grammar, actions = {}, dependencies = []) {
+		super(grammar, actions, dependencies);
+
+		this.origin = null;
+	}
+
+	augment(nt, tokens, action = null) {
+		if (typeof action === 'function')
+			this.actions[this.grammar.productions.length] = action;
+
+		this.grammar.addProduction(nt, tokens, {});
+	}
+
+	generateParser() {
+		const table = this.generateParsingTable();
+
+		return parserFactory(table, {...this.actions});
+	}
+}
 
 const precedenceMapper = {
 	left: LEFT,
@@ -300,17 +397,22 @@ export function toGrammar(code, rootName = null, ctxt = {}) {
 
 	//console.log(JSON.stringify(list, null, 4));
 
-	return {
-        dependencies,
-        sourceLineMapping: list.map(p => p.line),
-		actions: list.reduce((obj, {code}, i) =>
-			((code ? obj[i] = compileLS(code) : null), obj), {}),
-		grammar: new Grammar(
+	const actions = list.reduce((obj, {code}, i) =>
+			((code ? obj[i] = compileLS(code) : null), obj), {});
+
+	const grammar = new Grammar(
             list.map(extractor('type', 'production', 'prec')),
             0,
             precedence
-        )
-	}
+        );
+
+	const craneGrammar = new ColdCraneGrammar(grammar, actions, dependencies);
+
+	list.forEach((p, i) => {
+		craneGrammar.addSourceLineMapping(i, p.line);
+	});
+
+	return craneGrammar;
 }
 
 function getLoc({source, range}) {

@@ -4,7 +4,8 @@ import path from "path"
 import fs from "fs"
 import babel from "babel-core"
 import colors from "colors"
-import generate, {Lexer} from "./src"
+import Lexer from "lexie"
+import generate, {read} from "./src"
 
 const {min, max, round, random} = Math;
 
@@ -23,6 +24,57 @@ const depad = (str) => {
     return lined
         .map(line => line.trim() ? line.slice(space) : '')
         .join('\n');
+}
+
+const getCraneGrammar = (source, opts) => {
+    const grammar = depad(source);
+    const logs = [];
+    const options = {
+        ...opts,
+        debug: true,
+        logger: {
+            log(...args) {
+                logs.push(args);
+            }
+        }
+    };
+    
+    return {
+        grammar: read(grammar, options),
+        log() {
+            for (const log of logs) {
+                console.log(...log);
+            }
+        }
+    }
+}
+
+const tokenize = function* (text) {
+    const prototype = {
+        get loc() {
+            const begin = {
+                line: 1,
+                column: 0
+            };
+
+            return {
+                start: begin,
+                end: begin
+            };
+        },
+        get string() {
+            return this.source.slice(...this.range);
+        }
+    };
+
+    for (const token of lexer.tokenize(text)) {
+        if (token.type === 'ws')
+            continue;
+
+        Object.setPrototypeOf(token, prototype);
+
+        yield token;
+    }
 }
 
 const language = (source) => {
@@ -56,23 +108,7 @@ const language = (source) => {
             // TODO: debug this
 
             const parsing = new this.generated.Parser();
-            const prototype = {
-                get loc() {
-                    const begin = {
-                        line: 1,
-                        column: 0
-                    };
-
-                    return {
-                        start: begin,
-                        end: begin
-                    };
-                },
-                get string() {
-                    return this.source.slice(...this.range);
-                }
-            };
-
+   
             const showStack = () => {
                 if (debug) {
                     const [start, ...states] = parsing.states.slice(0);
@@ -98,17 +134,14 @@ const language = (source) => {
 
             showStack();
 
-            for (let token of lexer.tokenize(text)) {
-                if (token.type !== 'ws') {
-                    Object.setPrototypeOf(token, prototype);
-
-                    parsing.push(token);
-                    showStack();
-                }
+            for (let token of tokenize(text)) {
+                parsing.push(token);
+                showStack();
             }
 
             return parsing.finish();
         },
+
         log() {
             for (const log of logs) {
                 console.log(...log);
@@ -142,6 +175,8 @@ let file = null;
 const context = {
     console,
     language,
+    tokenize,
+    getCraneGrammar,
     languages: {},
     test(title, fn) {
         const padded = (++i + '').padEnd(4);
@@ -161,8 +196,10 @@ const context = {
                     try {
                         fn();
                     } catch (e) {
-                        throw new Error(`Function failed to throw error!`);
+                        return;
                     }
+
+                    throw new Error(`Function failed to throw error!`);
                 }
             });
 

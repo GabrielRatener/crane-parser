@@ -2,11 +2,12 @@
 import {Queue, SubSet} from "./collections"
 import {PrecedenceTable} from "./precedence"
 
+const validAttributes = new Set(['prec']);
+
 function getAttributes(production) {
     const extra = {};
-    const ommit = new Set(['type', 'production', 'code']);
     for (let key in production) {
-        if (production.hasOwnProperty(key) && !ommit.has(key)) {
+        if (production.hasOwnProperty(key) && validAttributes.has(key)) {
             extra[key] = production[key];
         }
     }
@@ -17,6 +18,12 @@ function getAttributes(production) {
 export const EOF = '$', EPS = '';
 
 export default class Grammar {
+	static fromJSON(json) {
+		const {productions, root, precedence} = json;
+
+		return new this(productions, root, precedence);
+	}
+
 	constructor(productions = [], root = 0, precedence = []) {
 
 		// all properties and their objects should be considered read-only
@@ -33,10 +40,26 @@ export default class Grammar {
 		for (let item of productions) {
             const {type, production} = item;
             const attributes = getAttributes(item);
+
 			this.addProduction(type, production, attributes);
 		}
 
 		this.setRoot(0);
+	}
+
+	clone() {
+		// not very elegant but does the trick...
+		return this.constructor.fromJSON(this.toJSON());
+	}
+
+	toJSON() {
+		const precedence = this.precedence.toJSON();
+		const root = this.root;
+		const productions = this.productions.map(([type, production]) => {
+			return {type, production};
+		});
+
+		return {precedence, root, productions};
 	}
 
 	extractPrecedence(p) {

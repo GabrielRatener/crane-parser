@@ -7,6 +7,12 @@ export const LEFT = 0, RIGHT = 1, NONE = 2;
 // either by adding operator/token precedence rules. Or explicitly, by
 // assigning precedence to specific rules with aliases
 export class PrecedenceTable {
+	static fromJSON(json) {
+		// json = [{type, tokens, alias}]
+
+		return new this(json);
+	}
+
 	constructor(levels = []) {
 
 		this.levels = [RIGHT]; // for default level 0 always shift
@@ -32,6 +38,26 @@ export class PrecedenceTable {
 				}
 			}
 		}
+	}
+
+	toJSON() {
+		const levels = this.levels.map((type) => {
+			return {
+				type,
+				tokens: [],
+				alias: null
+			}
+		});
+
+		for (const [token, level] of this.byToken) {
+			levels[level].push(token);
+		}
+
+		for (const [alias, level] of this.byAlias) {
+			levels[level].alias = alias;
+		}
+
+		return levels;
 	}
 
 	getPrecedence(token) {

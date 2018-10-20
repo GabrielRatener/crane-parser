@@ -1,14 +1,16 @@
 
-import {compile} from "./dsl"
+import {compile, toGrammar} from "./dsl"
 import {generate as makeCode} from "./code-gen"
-import {SRConflictError, RRConflictError, clr as table} from "./generator"
+import {SRConflictError, RRConflictError, clr} from "./generator"
 
 export {default as Grammar, EOF, EPS} from "./grammar"
 export {ParsingTable, parse, token as tokenify} from "./parser"
-export {table};
+export {compile, toGrammar};
 export {default as Lexer} from "lexie"
+export {clr as generateParsingTable};
 
 const pad = (e, n) => ('' + e).padEnd(n, ' ');
+
 // compile a string of crane grammar to a JS parser
 export default function generate(code, options) {
 	const {rootName, context = {}, debug = false, logger = console} = options;
@@ -18,7 +20,7 @@ export default function generate(code, options) {
     const map = new Map(Object.entries(actions).map(([k, v]) => [parseInt(k), v]));
     const parseTable = (() => {
     	try {
-	    	return table(grammar, debug ? logger : null);
+	    	return clr(grammar, debug ? logger : null);
     	} catch (e) {
 			const lines = code.split('\n');
     		if (e instanceof RRConflictError) {
@@ -64,4 +66,10 @@ export default function generate(code, options) {
 	}
 
     return makeCode(parseTable, map, dependencies);
+}
+
+export function read(code, options) {
+    const {rootName, context = {}} = options;
+
+    return compile(code, rootName, context);
 }
