@@ -24,6 +24,14 @@ export default class Grammar {
 		return new this(productions, root, precedence);
 	}
 
+	static equal(a, b) {
+		const itemize = (g) => {
+			return JSON.stringify(g.toJSON());
+		}
+
+		return (itemize(a) === itemize(b));
+	}
+
 	constructor(productions = [], root = 0, precedence = []) {
 
 		// all properties and their objects should be considered read-only

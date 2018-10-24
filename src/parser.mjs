@@ -1,5 +1,6 @@
 
 import {SparseTable} from "./collections";
+import Grammar from "./grammar"
 
 const {max} = Math;
 
@@ -10,33 +11,71 @@ export class ParsingTable {
 	construction API. Otherwise the table should be considered read-only.
 	*/
 
+
+	static fromJSON({table, grammar, mappers, gotoIndex}) {
+		const pt = new this(Grammar.fromJSON(grammar));
+
+		// overwrite empty table with our own (yes, not the most elegant...)
+		pt.table = SparseTable.fromJSON(table);
+		pt.gotoIndex = gotoIndex;
+
+		for (let i = 0; i < mappers.length; i++) {
+			if (i < gotoIndex) {
+				pt.indexMappers.action.set(mappers[i], i);
+			} else {
+				pt.indexMappers.goto.set(mappers[i], i);
+			}
+		}
+
+		return pt;
+	}
+
 	// first argument is an LR grammar
 	// which initializes the columns
-	constructor(grammar) {
+	constructor(grammar, initial = true) {
 		const gotoIndex = grammar.terminals.size;
 		const width = gotoIndex + grammar.nonTerminals.size;
 		let index = 0;
-		this._id = 1;
-		this.rowMap = new Map();
 		this.grammar = grammar;
-		this.table = new SparseTable(width, 0);
+		this.table = initial ? new SparseTable(width, 0) : null;
 		this.gotoIndex = gotoIndex; // offset of GOTO section of table
 		this.indexMappers = { // maps symbols to their column offsets in table
 			action: new Map(),
 			goto: new Map()
 		};
 
-		for (let terminal of grammar.terminals) {
-			if (terminal === undefined)
-				console.error('found undefined terminal');
+		if (initial) {
+			for (let terminal of grammar.terminals) {
+				if (terminal === undefined)
+					console.error('found undefined terminal');
 
-			this.indexMappers.action.set(terminal, index);
-			index++;
+				this.indexMappers.action.set(terminal, index);
+				index++;
+			}
+
+			for (let [nonTerminal] of grammar.nonTerminals) {
+				this.indexMappers.goto.set(nonTerminal, index);
+				index++;
+			}
+		}
+	}
+
+	toJSON() {
+		const mappers = new Array(this.table.width);
+
+		for (const [symbol, index] of this.indexMappers.action) {
+			mappers[index] = symbol;
 		}
 
-		for (let [nonTerminal] of grammar.nonTerminals) {
-			this.indexMappers.goto.set(nonTerminal, index);
-			index++;
+		for (const [symbol, index] of this.indexMappers.goto) {
+			mappers[index] = symbol;
+		}
+
+		return {
+			mappers,
+			gotoIndex: this.gotoIndex,
+			table: this.table.toJSON(),
+			grammar: this.grammar.toJSON()
 		}
 	}
 

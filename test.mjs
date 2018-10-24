@@ -5,7 +5,7 @@ import fs from "fs"
 import babel from "babel-core"
 import colors from "colors"
 import Lexer from "lexie"
-import generate, {read} from "./src"
+import generate, {parserFactory, read} from "./src"
 
 const {min, max, round, random} = Math;
 
@@ -176,6 +176,7 @@ const context = {
     console,
     language,
     tokenize,
+    parserFactory,
     getCraneGrammar,
     languages: {},
     test(title, fn) {

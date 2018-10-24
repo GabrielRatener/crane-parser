@@ -1,7 +1,7 @@
 {
   "name": "crane-parser",
-  "version": "1.0.0",
-  "description": "LR parsing with a hint of saffron",
+  "version": "0.1.0",
+  "description": "Push-based JS parser-generator for LR grammars",
   "main": "./src/index.mjs",
   "directories": {
     "test": "test"

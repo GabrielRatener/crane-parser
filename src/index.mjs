@@ -8,6 +8,7 @@ export {ParsingTable, parse, token as tokenify} from "./parser"
 export {compile, toGrammar};
 export {default as Lexer} from "lexie"
 export {clr as generateParsingTable};
+export {default as parserFactory} from "./parser-factory"
 
 const pad = (e, n) => ('' + e).padEnd(n, ' ');
 

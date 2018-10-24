@@ -3,11 +3,36 @@
 
 
 export class SparseTable {
+
+	static fromJSON({width, height, values}) {
+		const table = new this(width, height);
+		for (const [y, x, value] of values) {
+			table.set(y, x, value);
+		}
+
+		return table;
+	}
+
 	constructor(width, height) {
 		this.width = width;
 		this.height = height;
 
 		this._map = new Map();
+	}
+
+	
+	toJSON() {
+		const values = [];
+
+		for (const [y, x] of this) {
+			values.push([y, x, this.get(y, x)]);
+		}
+
+		return {
+			values,
+			width: this.width,
+			height: this.height
+		}
 	}
 
 	verify(y, x) {
@@ -28,6 +53,10 @@ export class SparseTable {
 
 	encode(y, x) {
 		return `${y}-${x}`;
+	}
+
+	decode(hash) {
+		return hash.split('-').map(s => parseInt(s, 10));
 	}
 
 	exists(y, x) {
@@ -57,9 +86,7 @@ export class SparseTable {
 
 	* [Symbol.iterator]() {
 		for (let [key] of this._map) {
-			yield key
-				.split('-')
-				.map(e => parseInt(e))
+			yield this.decode(key);
 		}
 	}
 }
