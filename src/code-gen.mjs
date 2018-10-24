@@ -3,7 +3,6 @@ import fs from "fs"
 import path from "path"
 import escodegen from "escodegen"
 import estemplate from "estemplate"
-import treeTools from "esprima-ast-utils"
 import * as js from "./js-nodes"
 
 const dirname = path.dirname(new URL(import.meta.url).pathname);
