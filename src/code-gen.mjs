@@ -2,7 +2,6 @@
 import fs from "fs"
 import path from "path"
 import escodegen from "escodegen"
-import babel from "babel-core"
 import estemplate from "estemplate"
 import treeTools from "esprima-ast-utils"
 import * as js from "./js-nodes"

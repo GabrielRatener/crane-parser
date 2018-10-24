@@ -1,6 +1,6 @@
 {
   "name": "crane-parser",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Push-based JS parser-generator for LR grammars",
   "main": "./src/index.mjs",
   "directories": {
