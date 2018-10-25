@@ -50,7 +50,7 @@ export class PrecedenceTable {
 		});
 
 		for (const [token, level] of this.byToken) {
-			levels[level].push(token);
+			levels[level].tokens.push(token);
 		}
 
 		for (const [alias, level] of this.byAlias) {

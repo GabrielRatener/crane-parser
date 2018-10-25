@@ -5,7 +5,7 @@ import fs from "fs"
 import babel from "babel-core"
 import colors from "colors"
 import Lexer from "lexie"
-import generate, {parserFactory, read} from "./src"
+import generate, {parserFactory, read, generateParsingTable} from "./src"
 
 const {min, max, round, random} = Math;
 
@@ -178,6 +178,7 @@ const context = {
     tokenize,
     parserFactory,
     getCraneGrammar,
+    generateParsingTable,
     languages: {},
     test(title, fn) {
         const padded = (++i + '').padEnd(4);
