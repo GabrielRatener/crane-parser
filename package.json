@@ -1,6 +1,6 @@
 {
   "name": "crane-parser",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Push-based JS parser-generator for LR grammars",
   "main": "./src/index.mjs",
   "directories": {
@@ -12,8 +12,7 @@
     "escodegen": "^1.8.1",
     "estemplate": "^0.5.1",
     "lexie": "^1.0.4",
-    "livescript": "^1.5.0",
-    "tangler": "^0.2.3"
+    "livescript": "^1.5.0"
   },
   "devDependencies": {
     "babel": "^6.23.0",

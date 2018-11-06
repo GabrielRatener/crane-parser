@@ -1,7 +1,6 @@
 #!/usr/bin/env node --experimental-modules
 
 const minimist = require('minimist');
-const tangler = require('tangler');
 const {readFileSync} = require('fs');
 const {version} = require('../package.json');
 const {join} = require('path');
