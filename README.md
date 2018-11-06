@@ -1,6 +1,6 @@
 
 # Crane Parser
-Generate fast, push-based LR parsers for JavaScript!
+### Generate fast, push-based LR parsers for JavaScript!
 
 ** Note there are features which are incomplete, or which I haven't yet had the chance to document, so check back soon to discover more!
 
@@ -44,35 +44,35 @@ $ crane -r expression /path/to/grammar.crane > /path/to/parser.js
 # %<associativity> '<token type 1>' '<token type 2>' ...
 %left '+' '-'
 %left '*' '/'
-%none unary		# for unary + or -
+%none unary     # for unary + or -
 %right '^'
 
 expression
-	> \number					=> parseFloat $[0]
-	> '(' expression ')'		=> $[1]
+    > \number                   => parseFloat $[0]
+    > '(' expression ')'        => $[1]
 
-	> expression '^' expression => $[0] ** $[2]
+    > expression '^' expression => $[0] ** $[2]
 
-	> expression '*' expression => $[0] * $[2]
-	> expression '/' expression => $[0] / $[2]
+    > expression '*' expression => $[0] * $[2]
+    > expression '/' expression => $[0] / $[2]
 
-	> expression '+' expression => $[0] + $[2]
+    > expression '+' expression => $[0] + $[2]
 
-	# livescript code snippets can also be multiline!
-	> expression '-' expression =>
-		a = $[0]
-		b = $[2]
-		a + b
-	
-	%prec unary
-	> '+' expression			=> +$[1]
+    # livescript code snippets can also be multiline!
+    > expression '-' expression =>
+        a = $[0]
+        b = $[2]
+        a + b
+    
+    %prec unary
+    > '+' expression            => +$[1]
 
-	%prec unary
-	> '-' expression			=> -$[2]
+    %prec unary
+    > '-' expression            => -$[2]
 
 root
-	# Without a code snippet the production evaluates to the first symbol
-	> expression
+    # Without a code snippet the production evaluates to the first symbol
+    > expression
 
 ```
 
@@ -91,21 +91,24 @@ A symbol (terminal, or non-terminal) follows JS variable naming rules, except it
 ```js
 import {Parser} from "path/to/my/generated/parser";
 
-const context = {
-	// The value `this` will take inside our livecode snippets
-	// We can deine variables and functions here that we want to access inside our parser!
-}
-
 // initialize our parser with our context
-const parsing = new Parser({context});
+const parsing = new Parser({
+    // these are the options we pass into the parser instance ...
+
+
+    // `context` is an object that will take the value of `this` inside our livescript snippets
+    context: {
+        // We can deine variables and functions here that we want to access inside our parser!
+    }
+});
 
 // note that Crane has no lexing capabilities
 // it is up to you to tokenize your code :(
 for (const token of lex(codeToBeLexed)) {
 
-	// This parser is push-based!!!
-	// parse at your own pace
-	parsing.push(token);
+    // This parser is push-based!!!
+    // parse at your own pace
+    parsing.push(token);
 }
 
 // when done pushing we call `finish` to reap the rewards of our parsing
@@ -132,30 +135,30 @@ To Crane a token looks like this
 
 ```js
 {
-	// the terminal type (e.g. `> "what-you-would-see-here" "other-terminal" some-non-terminal`)
-	// must follow the naming rules specified above
-	type: <string>
+    // the terminal type (e.g. `> "what-you-would-see-here" "other-terminal" some-non-terminal`)
+    // must follow the naming rules specified above
+    type: <string>
 
-	// The value the token represents
-	// By default this value is what gets fed into the livescript snippets in place of the symbol
-	value: <whatever>
+    // The value the token represents
+    // By default this value is what gets fed into the livescript snippets in place of the symbol
+    value: <whatever>
 
-	// Location (loc) is optional, but if specified must look like this:
-	loc?: {
-		start: {
-			// line offset of token start, starting at 1
-			line: <int>
+    // Location (loc) is optional, but if specified must look like this:
+    loc?: {
+        start: {
+            // line offset of token start, starting at 1
+            line: <int>
 
-			// column offset of token start, starting at 0
-			column: <int>
-		}
+            // column offset of token start, starting at 0
+            column: <int>
+        }
 
-		// same deal as start but for end of token!
-		end: {
-			line: <int>
-			column: <int>
-		}
-	}
+        // same deal as start but for end of token!
+        end: {
+            line: <int>
+            column: <int>
+        }
+    }
 }
 ```
 
