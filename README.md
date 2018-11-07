@@ -15,8 +15,8 @@ $ npm install -g crane-parser
 ### From source
 
 ```sh
-$ git clone https://github.com/gabrielratener/crane-js
-$ cd crane-js
+$ git clone https://github.com/gabrielratener/crane-parser
+$ cd crane-parser
 $ npm install -g
 ```
 
