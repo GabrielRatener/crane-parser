@@ -8,13 +8,13 @@
 
 ### From NPM
 
-```
+```sh
 $ npm install -g crane-parser
 ```
 
 ### From source
 
-```
+```sh
 $ git clone https://github.com/gabrielratener/crane-js
 $ cd crane-js
 $ npm install -g
@@ -115,7 +115,16 @@ for (const token of lex(codeToBeLexed)) {
 const parsingResult = parsing.finish();
 ```
 
-As you can see, the parser has two functions that we use for the actual parsing `push`, and `finish`.
+### Options
+
+* #### `context`
+
+    This is the `this` value that the livescript actions receive during parsing
+
+
+### API
+
+As you can see above, the parser has two functions that we use for the actual parsing `push`, and `finish`.
 
 #### `push(token)`
 
