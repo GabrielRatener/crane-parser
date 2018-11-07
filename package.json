@@ -1,10 +1,13 @@
 {
   "name": "crane-parser",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Push-based JS parser-generator for LR grammars",
   "main": "./src/index.mjs",
   "directories": {
     "test": "test"
+  },
+  "engines": {
+    "node": ">=8.5.0"
   },
   "dependencies": {
     "acorn": "^5.0.3",
