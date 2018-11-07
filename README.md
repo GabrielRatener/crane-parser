@@ -98,7 +98,7 @@ const parsing = new Parser({
 
     // `context` is an object that will take the value of `this` inside our livescript snippets
     context: {
-        // We can deine variables and functions here that we want to access inside our parser!
+        // We can define variables and functions here that we want to access inside our parser!
     }
 });
 
@@ -120,6 +120,8 @@ const parsingResult = parsing.finish();
 * #### `context`
 
     This is the `this` value that the livescript actions receive during parsing
+
+* #### `context`
 
 
 ### API
