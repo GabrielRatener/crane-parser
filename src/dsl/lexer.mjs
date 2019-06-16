@@ -23,7 +23,7 @@ export function parseLn(str) {
 
 const lexer = createLexer([
     {
-        regex: /[>\(\)\[\]\@\:\,\*]/
+        regex: /[>\(\)\[\]\@\:\,\*\.]/
     },
     {
         regex: /''/,

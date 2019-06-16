@@ -5,6 +5,10 @@ Root:
 Id:
     id  => @node.id {name: $[0]}
 
+Address:
+    Id                  => @node.address {path: [$[0].name]}
+    Address "." Id      => @node.address {path: [...$[0].path, $[2].name]}
+
 Grammar:
 	Body
 	Body endl
@@ -47,7 +51,7 @@ Expression:
 	CallExpression
 	OrExpression
 	String
-	Id
+	Address
 
 ExpressionList:
 	Expression	=> [$[0]]

@@ -72,6 +72,7 @@ export function generate(lrTable, actions = new Map(), imports = []) {
 	})(lrTable);
 
 	const params = {
+		reducers,
 		gotoStart: new js.Literal(action.size),
 		goto: gotoAst,
 		action: actionAst,
@@ -81,8 +82,7 @@ export function generate(lrTable, actions = new Map(), imports = []) {
 				([nt, p]) => new js.ArrayExpression([
 					new js.Literal(goto.get(nt)),
 					new js.Literal(p.length)
-					]))),
-		reducers
+					])))
 	}
 
 	const gen = estemplate.compile(template, {

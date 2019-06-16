@@ -1,24 +1,33 @@
 #!/usr/bin/env node --experimental-modules
 
-const minimist = require('minimist');
-const {readFileSync} = require('fs');
+const {readFile} = require('fs');
 const {version} = require('../package.json');
 const {join} = require('path');
-
-const {_: [file], root, debug} = minimist(process.argv.slice(2), {
-    alias: {
-        root: 'r',
-        debug: 'd'
-    }
-});
-
-const path = join(process.cwd(), file);
-
-const code = readFileSync(path, 'utf8');
+const commander = require('commander');
 
 import(`${__dirname}/../src/index.mjs`)
 	.then((module) => {
-		const output = module.default(code, {rootName: root || null, debug: !!debug});
-		console.log(output);
+
+		commander
+			.version(version)
+			.option('-r, --root', 'Non-terminal to use as root')
+            .option('-d, --debug', 'Run parser-generator in debug mode')
+            .action((file, opts) => {
+                const path = join(process.cwd(), file);
+
+                readFile(path, 'utf8', (err, code) => {
+
+                    if (err) {
+                        console.error(`File "${path}" not found`);
+                    } else {
+                        const output = module.default(code, {
+                            rootName: opts.root || null,
+                            debug: !!opts.debug
+                        });
+                        console.log(output);        
+                    }
+                });
+            })
+            .parse(process.argv);
 	});
 

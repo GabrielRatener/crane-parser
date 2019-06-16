@@ -3,7 +3,7 @@ import vm from "vm"
 import ls from "livescript"
 import acorn from "acorn"
 import escodegen from "escodegen"
-import {Parser} from "./parser.out"
+import {Parser} from "./parser.out.mjs"
 import {tokenize} from "./postprocess"
 import {clr} from "../generator"
 import {SubSet, Queue} from "../collections"
@@ -140,7 +140,6 @@ function expand(prod, code) {
 	return prods.map(([type, production]) => ({type, production, code}));
 }
 
-
 export function compileLS(code, aliases = new Map()) {
     const aliasList = [];
     
@@ -185,6 +184,14 @@ export function toGrammar(code, rootName = null, ctxt = {}) {
 		actions: {}
 	};
 
+	const resolve = (ctx, e) => {
+		if (e.type === 'address') {
+			return ctx.resolvePath(e.path);
+		} else {
+			return e.value;
+		}
+	}
+
 	const context = {
 		// TODO: add @additional and @questionable
 
@@ -201,7 +208,7 @@ export function toGrammar(code, rootName = null, ctxt = {}) {
 				{
 	                type: name,
 					line: sourceLine,
-	                production: [this.resolve(toString(e))],
+	                production: [resolve(this, e)],
 	                code: '[$[0]]'
 	            }
             ]);
@@ -210,14 +217,14 @@ export function toGrammar(code, rootName = null, ctxt = {}) {
 				list.push({
                     type: name,
 					line: sourceLine,
-                    production: [name, this.resolve(toString(sep)), this.resolve(toString(e))],
+                    production: [name, resolve(this, sep), resolve(this, e)],
                     code: '[...$[0], $[2]]'
                 });
 			else
 				list.push({
                     type: name,
 					line: sourceLine,
-                    production: [name, this.resolve(toString(e))],
+                    production: [name, resolve(this, e)],
                     code: '[...$[0], $[1]]'
                 });
 
@@ -298,10 +305,13 @@ export function toGrammar(code, rootName = null, ctxt = {}) {
             
             for (let e of p.production) {
                 if (e.type === 'string') {
-                    reformed.push(e.value);
+					reformed.push(e.value);
+					
+					continue;
                 }
                 
 				if (e.type === 'call') {
+
 					const localCtxt = {
 						newId() {
 							return `$__${++i}`;
@@ -314,10 +324,22 @@ export function toGrammar(code, rootName = null, ctxt = {}) {
 								return name;
 							}
 						},
+
+						resolvePath(path) {
+							const [root, ...rest] = path;
+							const resolved = this.resolve(root);
+
+							if (rest.length === 0) {
+								return resolved;
+							} else {
+								return `${resolved}.${rest.join('.')}`;
+							}
+						},
                         
 						// The recursive flag will determine whether expression lists
 						// passed into function calls are also resolved
 						preCompile(expressionList, recursive = true) {
+
 							const newList = [];
 							expressionList.forEach(e => {
 								if (e.type === 'call') {
@@ -330,6 +352,14 @@ export function toGrammar(code, rootName = null, ctxt = {}) {
 											e.args
 									});
 
+									return;
+								}
+
+								if (e.type === 'address') {
+
+									const resolved = this.resolvePath(e.path);
+									newList.push(resolved);
+									
 									return;
 								}
 
@@ -375,6 +405,24 @@ export function toGrammar(code, rootName = null, ctxt = {}) {
 					}
 
 					reformed.push(handle);
+
+					continue;
+				}
+
+				if (e.type === 'address') {
+					const [place, ...address] = e.path;
+					if (place in vars) {
+						const resolved =
+						  (address.length === 0) ?
+							vars[place] :
+							`${vars[place]}.${address.join('.')}`;
+
+						reformed.push(resolved);
+					} else {
+						throw new Error(`Non-terminal "${place}" not defined`);
+					}
+
+					continue;
 				}
 
 				if (e.type === 'id') {
@@ -382,9 +430,11 @@ export function toGrammar(code, rootName = null, ctxt = {}) {
 						reformed.push(vars[e.name]);
 					else
 						throw new Error(`Non-terminal "${e.name}" not defined`);
+
+					continue;
 				}
 			}
-            
+			
 			list.push({
                 type: name,
                 line: p.line,
@@ -394,8 +444,6 @@ export function toGrammar(code, rootName = null, ctxt = {}) {
             });
 		});
 	}
-
-	//console.log(JSON.stringify(list, null, 4));
 
 	const actions = list.reduce((obj, {code}, i) =>
 			((code ? obj[i] = compileLS(code) : null), obj), {});
@@ -470,6 +518,7 @@ export function compile(string, name, additional = {}) {
 	}
 
 	for (let token of tokenize(string + '\n')) {
+
 		try {
 			parsing.push(token);
 		} catch (e) {

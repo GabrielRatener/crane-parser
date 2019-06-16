@@ -11,7 +11,6 @@ import {LEFT, RIGHT} from "../precedence"
 import {compileLS, toGrammar, extractor} from "."
 
 const dir = process.cwd();
-const [file] = process.argv.slice(-1);
 
 const getParserCode = (ast) => {
 	const actions = new Map();
@@ -115,5 +114,5 @@ const getParser = (index, {accepts, Parser} = getBaseParser()) => {
 
 const {source} = getParser(0);
 
-if (file.endsWith('.mjs'))
-    fs.writeFileSync(`${dir}/${file}`, source);
+console.log('// Parser generated from LR Grammar');
+console.log(source);
