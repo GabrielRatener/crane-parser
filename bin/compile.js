@@ -1,4 +1,4 @@
-#!/usr/bin/env node --experimental-modules
+#!/usr/bin/env node --experimental-modules --es-module-specifier-resolution=node
 
 const {readFile} = require('fs');
 const {version} = require('../package.json');
