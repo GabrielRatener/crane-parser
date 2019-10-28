@@ -111,23 +111,23 @@ export function generate(lrTable, actions = new Map(), imports = []) {
         
         if (pack.all != null) {
             validate(pack.all);
-            specifiers.push(new js.ImportNamespaceSpecifier(new js.Identifier(pack.all)));
+            specifiers.push(new js.ImportNamespaceSpecifier(new js.Identifier(pack.all.name)));
         }
         
         if (pack.default != null) {
             validate(pack.default);
-            specifiers.push(new js.ImportDefaultSpecifier(new js.Identifier(pack.default)));
+            specifiers.push(new js.ImportDefaultSpecifier(new js.Identifier(pack.default.name)));
         }
         
         for (let {imported, local = imported} of dependencies) {
             validate(local);
             specifiers.push(new js.ImportSpecifier(
-                new js.Identifier(local),
-                new js.Identifier(imported)
+                new js.Identifier(local.name),
+                new js.Identifier(imported.name)
             ));
         }
         
-        declarations.push(new js.ImportDeclaration(specifiers, new js.Literal(pack.path)));
+        declarations.push(new js.ImportDeclaration(specifiers, new js.Literal(pack.path.value)));
     }
     
     ast.body = [...declarations, ...ast.body];
