@@ -2,8 +2,6 @@
 # Crane Parser
 ### Generate fast, push-based LR parsers for JavaScript!
 
-** Note there are features which are incomplete, or which I haven't yet had the chance to document, so check back soon to discover more!
-
 ## Install
 
 ### From NPM
@@ -36,7 +34,10 @@ $ crane /path/to/grammar.crane > /path/to/parser.js
 $ crane -r expression /path/to/grammar.crane > /path/to/parser.js
 ```
 
-## Grammar Syntax
+## Grammar Language
+
+One of the defining features of Crane is its high-level grammar definition language. In addition to being able to specify top-level productions, Crane introduces scoped productions with a namespacing system to reference non-terminals across scopes. Crane also has a hygienic macro system to simplify grammar syntax and prevent superfluous productions.
+The Crane Language is indentation-based and uses LiveScript functions to define actions.
 
 ### Basic Arithmetic Expression Grammar Example
 ```ls
