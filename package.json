@@ -1,7 +1,7 @@
 {
   "name": "crane-parser",
   "type": "module",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Push-based JS parser-generator for LR grammars",
   "main": "./src/index.js",
   "directories": {
