@@ -1,8 +1,8 @@
 
-import {Trie, Queue} from "./collections"
-import {ParsingTable} from "./parser"
-import {EOF, EPS} from "./grammar"
-import {LEFT, RIGHT} from './precedence'
+import {Trie, Queue} from "./collections.js"
+import {ParsingTable} from "./parser.js"
+import {EOF, EPS} from "./grammar.js"
+import {LEFT, RIGHT} from "./precedence.js"
 
 const {floor} = Math;
 

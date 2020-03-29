@@ -1,5 +1,5 @@
 
-import {SparseTable} from "./collections"
+import {SparseTable} from "./collections.js"
 
 export const LEFT = 0, RIGHT = 1, NONE = 2;
 

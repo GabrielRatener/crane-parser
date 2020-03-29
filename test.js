@@ -5,7 +5,7 @@ import fs from "fs"
 import babel from "babel-core"
 import colors from "colors"
 import Lexer from "lexie"
-import generate, {parserFactory, read, generateParsingTable} from "./src"
+import generate, {parserFactory, read, generateParsingTable} from "./src/index.js"
 
 const {min, max, round, random} = Math;
 

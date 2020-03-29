@@ -1,14 +1,14 @@
 
-import {compile, toGrammar} from "./dsl"
-import {generate as makeCode} from "./code-gen"
-import {SRConflictError, RRConflictError, clr} from "./generator"
+import {compile, toGrammar} from "./dsl/index.js"
+import {generate as makeCode} from "./code-gen.js"
+import {SRConflictError, RRConflictError, clr} from "./generator.js"
 
-export {default as Grammar, EOF, EPS} from "./grammar"
-export {ParsingTable, parse, token as tokenify} from "./parser"
+export {default as Grammar, EOF, EPS} from "./grammar.js"
+export {ParsingTable, parse, token as tokenify} from "./parser.js"
 export {compile, toGrammar};
 export {default as Lexer} from "lexie"
 export {clr as generateParsingTable};
-export {default as parserFactory} from "./parser-factory"
+export {default as parserFactory} from "./parser-factory.js"
 
 const pad = (e, n) => ('' + e).padEnd(n, ' ');
 

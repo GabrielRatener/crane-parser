@@ -1,13 +1,14 @@
 {
   "name": "crane-parser",
+  "type": "module",
   "version": "0.2.0",
   "description": "Push-based JS parser-generator for LR grammars",
-  "main": "./src/index.mjs",
+  "main": "./src/index.js",
   "directories": {
     "test": "test"
   },
   "engines": {
-    "node": ">=12.13.0"
+    "node": ">=13.0.0"
   },
   "dependencies": {
     "acorn": "^5.0.3",
@@ -31,7 +32,7 @@
     "crane": "./bin/compile.js"
   },
   "scripts": {
-    "test": "node --experimental-modules --es-module-specifier-resolution=node test.mjs"
+    "test": "node test.js"
   },
   "repository": {
     "type": "git",

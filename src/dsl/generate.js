@@ -1,13 +1,13 @@
 
 import fs from "fs"
 import vm from "vm"
-import {tokenize} from "./postprocess"
-import {grammar, actions} from "./bootstrap-grammar"
-import Grammar from "../grammar"
-import {clr} from "../generator"
+import {tokenize} from "./postprocess.js"
+import {grammar, actions} from "./bootstrap-grammar.js"
+import Grammar from "../grammar.js"
+import {clr} from "../generator.js"
 import {generate} from "../code-gen"
 import babel from "babel-core"
-import {LEFT, RIGHT} from "../precedence"
+import {LEFT, RIGHT} from "../precedence.js"
 import {compileLS, toGrammar, extractor} from "."
 
 const dir = process.cwd();

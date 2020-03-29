@@ -1,6 +1,6 @@
 
-import {Queue, SubSet} from "./collections"
-import {PrecedenceTable} from "./precedence"
+import {Queue, SubSet} from "./collections.js"
+import {PrecedenceTable} from "./precedence.js"
 
 const validAttributes = new Set(['prec']);
 

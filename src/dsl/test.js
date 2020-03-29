@@ -1,7 +1,7 @@
 
 import fs from "fs"
-import {sanitize, raw} from "./postprocess"
-import {Parser} from "./parser.out"
+import {sanitize, raw} from "./postprocess.js"
+import {Parser} from "./parser.out.js"
 
 /*
 const source = `

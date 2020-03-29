@@ -1,6 +1,6 @@
 
-import {SparseTable} from "./collections";
-import Grammar from "./grammar"
+import {SparseTable} from "./collections.js";
+import Grammar from "./grammar.js"
 
 const {max} = Math;
 

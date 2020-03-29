@@ -1,6 +1,6 @@
 
-import lexer, {parseLn, lex} from "./lexer"
-import {Queue} from "../collections"
+import lexer, {parseLn, lex} from "./lexer.js"
+import {Queue} from "../collections.js"
 
 /*
 function* locate(tokens) {

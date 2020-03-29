@@ -3,10 +3,10 @@ import fs from "fs"
 import path from "path"
 import escodegen from "escodegen"
 import estemplate from "estemplate"
-import * as js from "./js-nodes"
+import * as js from "./js-nodes.js"
 
 const dirname = path.dirname(new URL(import.meta.url).pathname);
-const template = fs.readFileSync(dirname + '/parser.template.mjs', 'utf8');
+const template = fs.readFileSync(dirname + '/parser.template.js', 'utf8');
 
 function node(type, props) {
 	const obj = {};

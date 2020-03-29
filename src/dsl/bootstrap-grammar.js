@@ -1,8 +1,8 @@
 
-import {tokenize as sanitize} from "./postprocess"
-import {clr} from "../generator"
+import {tokenize as sanitize} from "./postprocess.js"
+import {clr} from "../generator.js"
 import {generate} from "../code-gen"
-import Grammar from "../grammar"
+import Grammar from "../grammar.js"
 import {compileLS} from "."
 
 const precedence = [
